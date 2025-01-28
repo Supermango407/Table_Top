@@ -1,20 +1,20 @@
 import pygame
 import os
-import sys
-sys.path.append('../table_top')
-import game_settings
 import settings
+from game import Game
+from othello.othello import Othello
 
 
 def start() -> None:
     """called once when game starts up"""
-    pass
+    start_game(Othello)
 
 
 def update() -> None:
     """called once per frame"""
-    window.fill(game_settings.background_color)
+    window.fill(settings.background_color)
     check_events()
+    open_game.update()
     pygame.display.update()
 
 
@@ -27,11 +27,17 @@ def check_events() -> None:
             run = False
 
 
+def start_game(game:Game):
+    global open_game
+    open_game = game(window)
+
+
 if __name__ == '__main__':
     # move window to second monitorf
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
 
     # Set global vars
+    open_game = None; """game currently playing"""
     window = pygame.display.set_mode(settings.window_size)
     clock = pygame.time.Clock()
     start()
