@@ -1,9 +1,10 @@
 import pygame
+from pygame import Vector2
 from typing import Union
-from window import GameObject
+from window import GameObject, Sprite, Text
 
 
-class Game(GameObject):
+class Game(Sprite):
     """the table top games class."""
 
     def __init__(self,name:str, players:int=2):
@@ -19,7 +20,17 @@ class Game(GameObject):
         self.table = None
         """the current set up of the game."""
 
+        # `turn_text`: text of the player whose turn it is
+        self.turn_text = Text('Player 1', anchor='top', position=Vector2(GameObject.window.get_width()//2, 16))
+        
         super().__init__()
+
+    def draw(self):
+        self.turn_text.draw()
+
+    def check_events(self, event) -> None:
+        """checks for inputs eg: key press, mouse clicks, ect."""
+        pass
 
     def next_turn(self) -> None:
         """check winner and if there's none move to the next player."""
@@ -33,7 +44,11 @@ class Game(GameObject):
         and 'tie' if its a tie"""
         return None
 
-    def check_events(self, event) -> None:
-        """checks for inputs eg: key press, mouse clicks, ect."""
-        pass
+    def get_moves(self) -> list:
+        """reutrns a list with all valid moves."""
+        return []
+
+    def valid_move(self) -> bool:
+        """returns true if the move is a valid move, else returns false"""
+        return True
 

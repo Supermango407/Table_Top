@@ -10,6 +10,7 @@ from board import Board
 def start() -> None:
     """called once when game starts up"""
     GameObject.window = window
+    GameObject.font = pygame.font.SysFont('Consolas', settings.font_size)
     start_game(Othello)
 
 
@@ -43,6 +44,10 @@ def start_game(game:Game):
 if __name__ == '__main__':
     # move window to second monitorf
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
+
+    # initiate window
+    pygame.init()
+    pygame.display.set_caption("Table Top")
 
     # Set global vars
     open_game:Game = None; """game currently playing"""

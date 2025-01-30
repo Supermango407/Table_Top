@@ -123,6 +123,14 @@ class Board(Sprite):
         
         return position//self.tile_spacing
 
+    def get_all_tiles(self) -> list[Vector2]:
+        """generator that reutrns a list with all tile locations in it."""
+        tiles = []
+        for x in range(self.tile_count[0]):
+            for y in range(self.tile_count[1]):
+                tiles.append(Vector2(x, y))
+        return tiles
+
 
 class TilePosition(object):
     """position of tile on board"""
@@ -148,3 +156,9 @@ class TilePosition(object):
         when look through the tiles left to right, then up to down"""
         return int(self.position.y*self.board.tile_count[0] + self.position.x)
 
+    def __eq__(self, value):
+        """set the == to only look at the position"""
+        return self.position == value
+
+    def __str__(self):
+        return str(self.position)
