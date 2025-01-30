@@ -3,10 +3,13 @@ import os
 import settings
 from game import Game
 from othello.othello import Othello
+from window import GameObject, Sprite
+from board import Board
 
 
 def start() -> None:
     """called once when game starts up"""
+    GameObject.window = window
     start_game(Othello)
 
 
@@ -14,7 +17,10 @@ def update() -> None:
     """called once per frame"""
     window.fill(settings.background_color)
     check_events()
-    open_game.update()
+
+    for gameobject in GameObject.childeren:
+        gameobject.update()
+
     pygame.display.update()
 
 
@@ -25,11 +31,13 @@ def check_events() -> None:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
+        elif open_game != None:
+            open_game.check_events(event)
 
 
 def start_game(game:Game):
     global open_game
-    open_game = game(window)
+    open_game = game()
 
 
 if __name__ == '__main__':
@@ -37,7 +45,7 @@ if __name__ == '__main__':
     os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
 
     # Set global vars
-    open_game = None; """game currently playing"""
+    open_game:Game = None; """game currently playing"""
     window = pygame.display.set_mode(settings.window_size)
     clock = pygame.time.Clock()
     start()

@@ -1,12 +1,14 @@
 import pygame
 from pygame import Vector2
 from typing import Union
+from window import GameObject, Sprite
 
-class Board(object):
 
-    def __init__(self, window:pygame.Surface, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None):
+class Board(Sprite):
+    childeren:list = []
+
+    def __init__(self, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None):
         """
-        `window`: the window the board is drawn on
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
         `offset`: added offset to `position`
@@ -18,7 +20,6 @@ class Board(object):
         `tile_border_color`: the color of the border between tiles
             if no color give will default to be an offset of the first index of `tile_colors`
         """
-        self.window = window
         self.anchor = anchor
         self.offset = offset
         self.tile_count = tile_count
@@ -54,6 +55,12 @@ class Board(object):
         
         self.position = Vector2(0, 0)
         self.set_position()
+        self.tile_spacing = self.tile_size+self.tile_border_width
+        """the spaceing between adjecent tiles"""
+
+        Board.childeren.append(self)
+
+        super().__init__()
 
     def set_position(self):
         # set `x` base on `self.anchor` and `self.offset`
@@ -76,7 +83,6 @@ class Board(object):
 
     def draw(self) -> None:
         # TODO fix misaligned border
-        tile_size = self.tile_size+self.tile_border_width
         """the size of the tiles including the boarder"""
 
         # draw a rect with the scale and color of the board
@@ -87,18 +93,58 @@ class Board(object):
             for x in range(self.tile_count[0]):
                 for y in range(self.tile_count[1]):
                     if (x+y) % 2 == 0:
-                        pygame.draw.rect(self.window, self.tile_colors[1], (self.position.x + x*tile_size, self.position.y + y*tile_size, self.tile_size, self.tile_size))
+                        pygame.draw.rect(self.window, self.tile_colors[1], (self.position.x + x*self.tile_spacing, self.position.y + y*self.tile_spacing, self.tile_size, self.tile_size))
 
         # draw border if it exsist
         if self.tile_border_width != 0:
-            x_pos_on = self.tile_size + self.position.x + self.tile_border_width//2
+            x_pos_on = self.tile_size+self.position.x
             """the next vertical line drawn's x pos"""
             for _ in range(1, self.tile_count[0]):
-                pygame.draw.line(self.window, self.tile_border_color, (x_pos_on, self.position.y), (x_pos_on, self.board_height+self.position.y), self.tile_border_width)
-                x_pos_on += tile_size
+                pygame.draw.rect(self.window, self.tile_border_color, (x_pos_on, self.position.y, self.tile_border_width, self.board_height))
+                x_pos_on += self.tile_spacing
 
-            y_pos_on = self.tile_size + self.position.y + self.tile_border_width//2
+            y_pos_on = self.tile_size+self.position.y
             """the next horizantal line drawn's y pos"""
             for _ in range(1, self.tile_count[1]):
-                pygame.draw.line(self.window, self.tile_border_color, (self.position.x, y_pos_on), (self.board_width+self.position.x, y_pos_on), self.tile_border_width)
-                y_pos_on += tile_size
+                pygame.draw.rect(self.window, self.tile_border_color, (self.position.x, y_pos_on, self.board_width, self.tile_border_width))
+                y_pos_on += self.tile_spacing
+
+    def get_tile_at(self, position:Vector2) -> Vector2:
+        """returns index of tile at `positions` if it exists"""
+        position -= self.position
+
+        # return None of not over board
+        if min(position) < 0 or position.x > self.board_width or position.y > self.board_height:
+            return None
+
+        # reutrn None if on border
+        if self.tile_border_width > 0 and (position.x%self.tile_spacing > self.tile_size or position.y%self.tile_spacing > self.tile_size):
+            return None
+        
+        return position//self.tile_spacing
+
+
+class TilePosition(object):
+    """position of tile on board"""
+    
+    def __init__(self, position:Vector2, board:Board=None):
+        """
+        `postition`: the postion of the tile
+        `board`: the board the tile is apart of.
+            if left none will default to the first index of `Board.childeren`
+        """
+        if board == None and len(Board.childeren) > 0:
+            self.board:Board = Board.childeren[0]
+        else:
+            self.board:Board = board
+        self.position:Vector2 = position
+    
+    def get_global_position(self):
+        """returns the global postion of `self`"""
+        return self.board.position + Vector2(1, 1)*self.board.tile_size//2 + self.position*self.board.tile_spacing
+    
+    def get_index(self):
+        """returns what number the position is,
+        when look through the tiles left to right, then up to down"""
+        return int(self.position.y*self.board.tile_count[0] + self.position.x)
+
