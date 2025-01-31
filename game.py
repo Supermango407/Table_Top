@@ -45,6 +45,7 @@ class Game(Sprite):
         if winner == None:
             self.turn = (self.turn+1)%len(self.players)
             self.set_moves()
+            self.turn_text.set_text(self.players[self.turn].name)
             
             if self.players[self.turn].is_ai:
                 if len(self.moves) > 0:

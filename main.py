@@ -41,10 +41,10 @@ def check_events() -> None:
 def start_game(game:Game):
     global open_game
     open_game = game(
-        Player("Player 1"),
+        # Player("Player 1"),
         AI.Randy(),
         # Player("Player 2"),
-        # AI.Randy(),
+        AI.Randy(),
     )
 
 

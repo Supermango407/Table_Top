@@ -80,6 +80,8 @@ class Othello(Game):
         super().next_turn()
         if len(self.moves) == 0:
             self.skip_turn()
+        else:
+            self.turn_text.set_color(game_settings.piece_colors[self.turn])
 
     def get_winner(self):
         if len(Piece.childeren) >= 64:

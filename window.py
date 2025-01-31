@@ -56,6 +56,16 @@ class Text(object):
         
         self.set_anchor(anchor)
 
+    def set_text(self, value:str):
+         """sets value of text"""
+         self.value = value
+         self.text = GameObject.font.render(self.value, True, self.color)
+
+    def set_color(self, color:tuple[int, int, int]):
+         """sets color of text"""
+         self.color = color
+         self.text = GameObject.font.render(self.value, True, self.color)
+
     def set_anchor(self, new_anchor:str):
         """sets the anchor of `self`"""
         self._anchor = new_anchor
