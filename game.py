@@ -6,18 +6,16 @@ from player import Player
 
 
 class Game(Sprite):
-    """the table top games class."""
+    """the Table_Top games class."""
 
-    def __init__(self, name:str, players:list[Player]):
+    def __init__(self, *players:tuple[Player]):
         """
-        `name`: the name of the game
-        `players`: the number of players playing
+        `players`: the players playing
         """
 
-        self.name = name
         self.players = players
 
-        self.turn = 0
+        self.turn = -1
         self.table = None
         """the current set up of the game."""
 
@@ -28,6 +26,10 @@ class Game(Sprite):
             position=Vector2(GameObject.window.get_width()//2, 16),
             color=(255, 255, 255)
         )
+        
+        self.game_running = True
+        self.next_turn()
+        
         super().__init__()
 
     def draw(self):
@@ -42,18 +44,37 @@ class Game(Sprite):
         winner = self.get_winner()
         if winner == None:
             self.turn = (self.turn+1)%len(self.players)
+            self.set_moves()
+            
+            if self.players[self.turn].is_ai:
+                if len(self.moves) > 0:
+                    self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
+        else:
+            if type(winner) == int:
+                print(f"Player {winner+1} is the winner!")
+            
+            self.end_game()
 
+    def play_move(self, move=None):
+        """plays `move` by player whos turn it is.
+        then goes to the next player's turn."""
+        self.next_turn()
+        
     def get_winner(self) -> Union[None, int, str]:
         """returns None if no one has won yet,
         an int if a player wins,
         and 'tie' if its a tie"""
         return None
 
-    def get_moves(self) -> list:
-        """reutrns a list with all valid moves."""
-        return []
+    def set_moves(self) -> list:
+        """sets `moves` to a list with all valid moves."""
+        self.moves = []
 
     def valid_move(self) -> bool:
         """returns true if the move is a valid move, else returns false"""
         return True
+
+    def end_game(self):
+        """ends the game, and returns to menu."""
+        self.game_running = False
 

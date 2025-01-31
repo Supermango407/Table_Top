@@ -56,9 +56,7 @@ class Piece(Sprite):
 
 class Othello(Game):
     
-    def __init__(self):
-        super().__init__('Othello', [Player('Player 1'), Player('Player 2')])
-        
+    def __init__(self, *players:tuple[Player]):
         self.board = Board(
             tile_size=game_settings.board['tile_size'],
             tile_border_width=game_settings.board['border_width'],
@@ -72,30 +70,60 @@ class Othello(Game):
             Piece(1, Vector2(4, 3)),
             Piece(0, Vector2(4, 4)),
         ]
-        print(Piece.get_piece_at(Vector2(3, 3)))
+
+        super().__init__(*players)
 
     def update(self):
         super().update()
+
+    def next_turn(self):
+        super().next_turn()
+        if len(self.moves) == 0:
+            self.skip_turn()
+
+    def get_winner(self):
+        if len(Piece.childeren) >= 64:
+            player_pieces = [0, 0]
+
+            # count the number of pieces for each player
+            for piece in Piece.childeren:
+                player_pieces[piece.player] += 1
+            
+            if player_pieces[0] > player_pieces[1]:
+                return 0
+            else:
+                return 1
+        else:
+            return None
+
+    def skip_turn(self):
+        """skips the turn of the current player."""
+        print('turn skipped')
+        self.next_turn()
 
     def check_events(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             tile_pos = self.board.get_tile_at(pygame.mouse.get_pos())
             if tile_pos != None:
                 if event.button == 1:
-                    self.place_piece(tile_pos)
+                    self.play_move(tile_pos)
 
-    def get_moves(self):
+    def set_moves(self):
+        self.moves = []
         moves = self.board.get_all_tiles()
 
         # delete the moves that arent valid
         for move in moves:
             # if a peice is already there its not valid.
-            if not self.valid_move(move):
-                moves.remove(move)
+            if self.valid_move(move):
+                self.moves.append(move)
 
-        return moves
+    def play_move(self, move:TilePosition):
+        if self.valid_move(move):
+            self.place_piece(move)
+            super().play_move()
 
-    def valid_move(self, move):
+    def valid_move(self, move:TilePosition):
         # isn't valid if a piece is already there
         if Piece.get_piece_at(move) != None:
             return False
@@ -112,7 +140,6 @@ class Othello(Game):
             Piece(self.turn, position)
             for piece in self.get_flip_pieces(position):
                 piece.flip()
-            self.next_turn()
 
     def get_flip_pieces(self, position:Vector2) -> list[Piece]:
         """reutrns a list of pieces that will flip if a peice is placed at `position`"""

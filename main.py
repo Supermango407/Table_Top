@@ -5,6 +5,8 @@ from game import Game
 from othello.othello import Othello
 from window import GameObject, Sprite
 from board import Board
+from player import Player
+import ai as AI
 
 
 def start() -> None:
@@ -38,12 +40,17 @@ def check_events() -> None:
 
 def start_game(game:Game):
     global open_game
-    open_game = game()
+    open_game = game(
+        Player("Player 1"),
+        AI.Randy(),
+        # Player("Player 2"),
+        # AI.Randy(),
+    )
 
 
 if __name__ == '__main__':
     # move window to second monitorf
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
+    # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
 
     # initiate window
     pygame.init()
