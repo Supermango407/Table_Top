@@ -49,38 +49,36 @@ class Text(object):
         """
         self.value = value
         self.color = color
+        self.position = position
         
         self.text = GameObject.font.render(self.value, True, color)
         self.text_rect = self.text.get_rect()
+        
+        self.set_anchor(anchor)
 
-        # set anchor
-        if 'top' in anchor:
-            if 'left' in anchor:
-                self.text_rect.topleft = position
-            elif 'right' in anchor:
-                self.text_rect.topright = position
-            else:
-                self.text_rect.top = position[1]
-                self.text_rect.centerx = position[0]
-        elif 'bottom' in anchor:
-            if 'left' in anchor:
-                self.text_rect.bottomleft = position
-            elif 'right' in anchor:
-                self.text_rect.bottomright = position
-            else:
-                self.text_rect.bottom = position[1]
-                self.text_rect.centerx = position[0]
-        elif 'left' in anchor:
-                self.text_rect.left = position[0]
-                self.text_rect.centery = position[1]
-        elif 'right' in anchor:
-                self.text_rect.right = position[0]
-                self.text_rect.centery = position[1]
+    def set_anchor(self, new_anchor:str):
+        """sets the anchor of `self`"""
+        self._anchor = new_anchor
+
+        if 'top' in new_anchor:
+                self.text_rect.top = self.position[1]
+        elif 'bottom' in new_anchor:
+                self.text_rect.bottom = self.position[1]
         else:
-            self.text_rect.center = position
+             self.text_rect.centery = self.position[1]
+        
+        if 'left' in new_anchor:
+                self.text_rect.left = self.position[0]
+        elif 'right' in new_anchor:
+                self.text_rect.right = self.position[0]
+        else:
+             self.text_rect.centerx = self.position[0]
 
-            
+    def get_anchor(self):
+        """returns value of `anchor`"""
+        return self._anchor
 
     def draw(self):
         """write text on screen."""
         GameObject.window.blit(self.text, self.text_rect)
+

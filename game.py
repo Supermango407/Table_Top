@@ -2,12 +2,13 @@ import pygame
 from pygame import Vector2
 from typing import Union
 from window import GameObject, Sprite, Text
+from player import Player
 
 
 class Game(Sprite):
     """the table top games class."""
 
-    def __init__(self,name:str, players:int=2):
+    def __init__(self, name:str, players:list[Player]):
         """
         `name`: the name of the game
         `players`: the number of players playing
@@ -21,8 +22,12 @@ class Game(Sprite):
         """the current set up of the game."""
 
         # `turn_text`: text of the player whose turn it is
-        self.turn_text = Text('Player 1', anchor='top', position=Vector2(GameObject.window.get_width()//2, 16))
-        
+        self.turn_text = Text(
+            self.players[0].name,
+            anchor='top',
+            position=Vector2(GameObject.window.get_width()//2, 16),
+            color=(255, 255, 255)
+        )
         super().__init__()
 
     def draw(self):
@@ -36,7 +41,7 @@ class Game(Sprite):
         """check winner and if there's none move to the next player."""
         winner = self.get_winner()
         if winner == None:
-            self.turn = (self.turn+1)%self.players
+            self.turn = (self.turn+1)%len(self.players)
 
     def get_winner(self) -> Union[None, int, str]:
         """returns None if no one has won yet,

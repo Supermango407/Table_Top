@@ -8,6 +8,7 @@ import othello.game_settings as game_settings
 from game import Game
 from board import Board, TilePosition
 from window import GameObject, Sprite
+from player import Player
 
 
 class Piece(Sprite):
@@ -56,7 +57,7 @@ class Piece(Sprite):
 class Othello(Game):
     
     def __init__(self):
-        super().__init__('Othello')
+        super().__init__('Othello', [Player('Player 1'), Player('Player 2')])
         
         self.board = Board(
             tile_size=game_settings.board['tile_size'],
@@ -72,6 +73,9 @@ class Othello(Game):
             Piece(0, Vector2(4, 4)),
         ]
         print(Piece.get_piece_at(Vector2(3, 3)))
+
+    def update(self):
+        super().update()
 
     def check_events(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
