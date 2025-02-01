@@ -128,7 +128,7 @@ class Board(Sprite):
         tiles = []
         for x in range(self.tile_count[0]):
             for y in range(self.tile_count[1]):
-                tiles.append(Vector2(x, y))
+                tiles.append(TilePosition(Vector2(x, y), self))
         return tiles
 
 

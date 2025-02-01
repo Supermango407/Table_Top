@@ -22,12 +22,12 @@ class Piece(Sprite):
             
         return None
 
-    def __init__(self, player:int, position:Union[Vector2, TilePosition]):
+    def __init__(self, color:str, position:Union[Vector2, TilePosition]):
         """
-        `player`: the player who controls the piece.
+        `color`: the color of the piece.
         `position`: the position on the board the peice is on.
         """
-        self.player = player
+        self.color = color
 
         if type(position) == Vector2:
             self.position = TilePosition(position)
@@ -44,19 +44,21 @@ class Piece(Sprite):
     def draw(self) -> None:
         pygame.draw.circle(
             self.window,
-            game_settings.piece_colors[self.player],
+            game_settings.piece_colors[Othello.colors.index(self.color)],
             self.position.get_global_position(),
             game_settings.piece_size
         )
 
     def flip(self):
         """flips the piece and gives it to the other player."""
-        self.player = 0 if self.player == 1 else 1
+        self.color = Othello.colors[1] if self.color == Othello.colors[0] else Othello.colors[0]
 
 
 class Othello(Game):
+    colors = ('B', 'W')
     
     def __init__(self, *players:tuple[Player]):
+        super().__init__(*players)
         self.board = Board(
             tile_size=game_settings.board['tile_size'],
             tile_border_width=game_settings.board['border_width'],
@@ -65,13 +67,13 @@ class Othello(Game):
         )
 
         self.table = [
-            Piece(0, Vector2(3, 3)),
-            Piece(1, Vector2(3, 4)),
-            Piece(1, Vector2(4, 3)),
-            Piece(0, Vector2(4, 4)),
+            Piece(Othello.colors[0], Vector2(3, 3)),
+            Piece(Othello.colors[1], Vector2(3, 4)),
+            Piece(Othello.colors[1], Vector2(4, 3)),
+            Piece(Othello.colors[0], Vector2(4, 4)),
         ]
 
-        super().__init__(*players)
+        self.next_turn()
 
     def update(self):
         super().update()
@@ -84,12 +86,13 @@ class Othello(Game):
             self.turn_text.set_color(game_settings.piece_colors[self.turn])
 
     def get_winner(self):
-        if len(Piece.childeren) >= 64:
+        print(len(self.table))
+        if len(self.table) >= 64:
             player_pieces = [0, 0]
 
             # count the number of pieces for each player
-            for piece in Piece.childeren:
-                player_pieces[piece.player] += 1
+            for piece in self.table:
+                player_pieces[Othello.colors.index(piece.color)] += 1
             
             if player_pieces[0] > player_pieces[1]:
                 return 0
@@ -105,10 +108,10 @@ class Othello(Game):
 
     def check_events(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
-            tile_pos = self.board.get_tile_at(pygame.mouse.get_pos())
-            if tile_pos != None:
-                if event.button == 1:
-                    self.play_move(tile_pos)
+            if event.button == 1 and not self.players[self.turn].is_ai:
+                tile_pos = self.board.get_tile_at(pygame.mouse.get_pos())
+                if tile_pos != None and self.valid_move(tile_pos):
+                        self.play_move(tile_pos)
 
     def set_moves(self):
         self.moves = []
@@ -121,9 +124,13 @@ class Othello(Game):
                 self.moves.append(move)
 
     def play_move(self, move:TilePosition):
-        if self.valid_move(move):
-            self.place_piece(move)
-            super().play_move()
+        piece = self.place_piece(move)
+        self.table.append(piece)
+        super().play_move(move)
+
+    def record_move(self, move:TilePosition):
+        self.history += Othello.colors[self.turn]
+        self.history += str(move.get_index())
 
     def valid_move(self, move:TilePosition):
         # isn't valid if a piece is already there
@@ -136,14 +143,14 @@ class Othello(Game):
         
         return True
 
-    def place_piece(self, position:Vector2) -> None:
-        """places a peice on the board if valid option."""
-        if self.valid_move(position):
-            Piece(self.turn, position)
-            for piece in self.get_flip_pieces(position):
+    def place_piece(self, position:Vector2) -> Piece:
+        """places a peice on the board, and returns the piece."""
+        piece = Piece(Othello.colors[self.turn], position)
+        for piece in self.get_flip_pieces(position):
                 piece.flip()
+        return piece
 
-    def get_flip_pieces(self, position:Vector2) -> list[Piece]:
+    def get_flip_pieces(self, tile:TilePosition) -> list[Piece]:
         """reutrns a list of pieces that will flip if a peice is placed at `position`"""
         pieces = [] # the reutrn value
 
@@ -170,7 +177,7 @@ class Othello(Game):
             # does range 1-7 cause thats the most the pieces
             # that can be fliped in a specific direction
             for i in range(1, 8):
-                piece_at_point_checking = Piece.get_piece_at(position + offset*i)
+                piece_at_point_checking = Piece.get_piece_at(tile.position + offset*i)
                 
                 # if no peice is at the `piece_at_point_checking`
                 # then break out of nested loop 
@@ -181,7 +188,7 @@ class Othello(Game):
                 # if piece found is the same color as player
                 # add `pieces_along_direction` to `pieces`
                 # then move to the next direction
-                if piece_at_point_checking.player == self.turn:
+                if piece_at_point_checking.color == Othello.colors[self.turn]:
                     pieces.extend(pieces_along_direction)
                     break
 

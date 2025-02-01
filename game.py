@@ -17,6 +17,7 @@ class Game(Sprite):
 
         self.turn = -1
         self.table = None
+        self.history = ""
         """the current set up of the game."""
 
         # `turn_text`: text of the player whose turn it is
@@ -28,7 +29,6 @@ class Game(Sprite):
         )
         
         self.game_running = True
-        self.next_turn()
         
         super().__init__()
 
@@ -60,7 +60,13 @@ class Game(Sprite):
         """plays `move` by player whos turn it is.
         then goes to the next player's turn."""
         self.next_turn()
+        print(move)
+        self.record_move(move)
         
+    def record_move(self, move=None) -> None:
+        """saves the `move` to history."""
+        pass
+
     def get_winner(self) -> Union[None, int, str]:
         """returns None if no one has won yet,
         an int if a player wins,
@@ -78,4 +84,5 @@ class Game(Sprite):
     def end_game(self):
         """ends the game, and returns to menu."""
         self.game_running = False
+        print(self.history)
 
