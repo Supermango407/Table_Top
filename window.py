@@ -11,29 +11,41 @@ class GameObject(object):
     def __init__(self):
         GameObject.childeren.append(self)
 
-    def start(self) -> None:
-        "called when game starts"
-        pass
-
     def update(self) -> None:
         """called once per frame"""
         pass
+
+    def destroy(self) -> None:
+         """Deletes `self` and removes it from GameOjbect's children."""
+         if self in GameObject.childeren:
+            GameObject.childeren.remove(self)
+         del(self)
 
 
 class Sprite(GameObject):
     """GameOjbects that are drawn to the screen"""
     childeren = []
 
-    def __init__(self):
+    def __init__(self, hidden=False):
+        """
+        `hidden`: if True it will not draw the object
+        """
+        self.hidden = hidden
         Sprite.childeren.append(self)
         super().__init__()
     
     def update(self):
         super().update()
-        self.draw()
+        if not self.hidden:
+            self.draw()
 
     def draw(self) -> None:
         pass
+
+    def destroy(self):
+         if self in Sprite.childeren:
+            Sprite.childeren.remove(self)
+         super().destroy()
 
 
 class Text(object):

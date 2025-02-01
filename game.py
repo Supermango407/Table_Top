@@ -28,9 +28,14 @@ class Game(Sprite):
             color=(255, 255, 255)
         )
         
-        self.game_running = True
+        self.game_running = False
         
         super().__init__()
+
+    def start_game(self):
+        self.game_running = True
+        self.turn = -1
+        self.next_turn()
 
     def draw(self):
         self.turn_text.draw()
@@ -40,28 +45,29 @@ class Game(Sprite):
         pass
 
     def next_turn(self) -> None:
-        """check winner and if there's none move to the next player."""
+        """move to the next player."""
+        self.turn = (self.turn+1)%len(self.players)
+        self.set_moves()
+        self.turn_text.set_text(self.players[self.turn].name)
+        
+        if self.game_running and self.players[self.turn].is_ai:
+            if len(self.moves) > 0:
+                self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
+     
+    def play_move(self, move=None):
+        """plays `move` by player whos turn it is.
+        then checks to see if the game ended
+        if not, goes to the next player's turn."""
+        self.record_move(move)
+        
         winner = self.get_winner()
         if winner == None:
-            self.turn = (self.turn+1)%len(self.players)
-            self.set_moves()
-            self.turn_text.set_text(self.players[self.turn].name)
-            
-            if self.players[self.turn].is_ai:
-                if len(self.moves) > 0:
-                    self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
+            self.next_turn()
         else:
             if type(winner) == int:
                 print(f"Player {winner+1} is the winner!")
-            
+        
             self.end_game()
-
-    def play_move(self, move=None):
-        """plays `move` by player whos turn it is.
-        then goes to the next player's turn."""
-        self.next_turn()
-        print(move)
-        self.record_move(move)
         
     def record_move(self, move=None) -> None:
         """saves the `move` to history."""
@@ -81,8 +87,17 @@ class Game(Sprite):
         """returns true if the move is a valid move, else returns false"""
         return True
 
-    def end_game(self):
+    def end_game(self) -> None:
         """ends the game, and returns to menu."""
         self.game_running = False
+        print('-'*80)
         print(self.history)
+        print('-'*80)
 
+    def show_record(self, record:str) -> None:
+        """showes what the board looks like if `record` it played."""
+        pass
+
+    def show_game(self, record:str) -> None:
+        """shows `record` of game played one move at a time."""
+        pass

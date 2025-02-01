@@ -5,8 +5,6 @@ from window import GameObject, Sprite
 
 
 class Board(Sprite):
-    childeren:list = []
-
     def __init__(self, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None):
         """
         `anchor`: where the board is placed on the screen eg:
@@ -57,8 +55,6 @@ class Board(Sprite):
         self.set_position()
         self.tile_spacing = self.tile_size+self.tile_border_width
         """the spaceing between adjecent tiles"""
-
-        Board.childeren.append(self)
 
         super().__init__()
 
@@ -128,37 +124,21 @@ class Board(Sprite):
         tiles = []
         for x in range(self.tile_count[0]):
             for y in range(self.tile_count[1]):
-                tiles.append(TilePosition(Vector2(x, y), self))
+                tiles.append(Vector2(x, y))
         return tiles
 
-
-class TilePosition(object):
-    """position of tile on board"""
+    def get_global_position(self, position:Vector2) -> Vector2:
+        """returns the global postion of `position`"""
+        return self.position + Vector2(1, 1)*self.tile_size//2 + position*self.tile_spacing
     
-    def __init__(self, position:Vector2, board:Board=None):
-        """
-        `postition`: the postion of the tile
-        `board`: the board the tile is apart of.
-            if left none will default to the first index of `Board.childeren`
-        """
-        if board == None and len(Board.childeren) > 0:
-            self.board:Board = Board.childeren[0]
-        else:
-            self.board:Board = board
-        self.position:Vector2 = position
-    
-    def get_global_position(self):
-        """returns the global postion of `self`"""
-        return self.board.position + Vector2(1, 1)*self.board.tile_size//2 + self.position*self.board.tile_spacing
-    
-    def get_index(self):
-        """returns what number the position is,
+    def get_tile_index(self, position:Vector2) -> int:
+        """returns what number `position` is
         when look through the tiles left to right, then up to down"""
-        return int(self.position.y*self.board.tile_count[0] + self.position.x)
+        return int(position.y*self.tile_count[0] + position.x)
 
-    def __eq__(self, value):
-        """set the == to only look at the position"""
-        return self.position == value
+    def get_tile_from_index(self, index:int):
+        """returns the local postion of tile at `index`"""
+        x = index%self.tile_count[0]
+        y = (index-x)//self.tile_count[0]
+        return Vector2(x, y)
 
-    def __str__(self):
-        return str(self.position)
