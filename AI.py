@@ -21,9 +21,13 @@ class Game_AI(Player):
 class Randy(Game_AI):
     """picks a random move and ingores the table setup."""
 
-    def __init__(self):
+    def __init__(self, seed=None):
+        if seed == None:
+            seed = random.randint(0, 1000000000)
+        
+        self.generator = random.Random(seed)
         super().__init__("Randy", "The Random")
 
     def calculate_move(self, options, table):
-        move = random.randint(0, len(options)-1)
+        move = self.generator.randint(0, len(options)-1)
         return move

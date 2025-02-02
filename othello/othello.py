@@ -45,7 +45,7 @@ class Othello(Game):
     colors = ('B', 'W')
 
     def __init__(self, *players:tuple[Player]):
-        super().__init__(*players)
+        super().__init__("Othello", *players)
         self.board = Board(
             tile_size=game_settings.board['tile_size'],
             tile_border_width=game_settings.board['border_width'],
@@ -63,6 +63,7 @@ class Othello(Game):
 
     def start_game(self):
         self.set_board()
+        self.no_valid_moves = False
         super().start_game()
 
     def update(self):
@@ -84,15 +85,19 @@ class Othello(Game):
         for piece in self.start_table:
             self.table.append(Piece(piece.color, piece.position, self.board))
 
-    def next_turn(self):
+    def next_turn(self, last_turn_skipped=False):
         super().next_turn()
         if len(self.moves) == 0:
-            self.skip_turn()
+            if last_turn_skipped:
+                print('no valid moves')
+                self.no_valid_moves = True
+            else:
+                self.skip_turn()
         else:
             self.turn_text.set_color(game_settings.piece_colors[self.turn])
 
     def get_winner(self):
-        if len(self.table) >= 64:
+        if self.no_valid_moves or len(self.table) >= 64:
             player_pieces = [0, 0]
 
             # count the number of pieces for each player
@@ -101,15 +106,17 @@ class Othello(Game):
             
             if player_pieces[0] > player_pieces[1]:
                 return 0
-            else:
+            elif player_pieces[1] > player_pieces[0]:
                 return 1
+            else:
+                return 'tie'
         else:
             return None
 
     def skip_turn(self):
         """skips the turn of the current player."""
         print('turn skipped')
-        self.next_turn()
+        self.next_turn(True)
 
     def check_events(self, event):
         if event.type == pygame.MOUSEBUTTONUP:

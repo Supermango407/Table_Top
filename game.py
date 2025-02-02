@@ -1,6 +1,7 @@
 import pygame
 from pygame import Vector2
 from typing import Union
+import data
 from window import GameObject, Sprite, Text
 from player import Player
 
@@ -8,11 +9,13 @@ from player import Player
 class Game(Sprite):
     """the Table_Top games class."""
 
-    def __init__(self, *players:tuple[Player]):
+    def __init__(self, name:str, *players:tuple[Player]):
         """
-        `players`: the players playing
+        `name`: the name of the game.
+        `players`: the players playing.
         """
 
+        self.name = name
         self.players = players
 
         self.turn = -1
@@ -35,6 +38,7 @@ class Game(Sprite):
     def start_game(self):
         self.game_running = True
         self.turn = -1
+        self.history = ''
         self.next_turn()
 
     def draw(self):
@@ -66,8 +70,10 @@ class Game(Sprite):
         else:
             if type(winner) == int:
                 print(f"Player {winner+1} is the winner!")
+            else:
+                print('its a ', winner)
         
-            self.end_game()
+            self.end_game(winner)
         
     def record_move(self, move=None) -> None:
         """saves the `move` to history."""
@@ -87,12 +93,13 @@ class Game(Sprite):
         """returns true if the move is a valid move, else returns false"""
         return True
 
-    def end_game(self) -> None:
+    def end_game(self, winner:str) -> None:
         """ends the game, and returns to menu."""
         self.game_running = False
-        print('-'*80)
-        print(self.history)
-        print('-'*80)
+        data.save_record(self.name, self.players, winner, self.history)
+        # print('-'*80)
+        # print(self.history)
+        # print('-'*80)
 
     def show_record(self, record:str) -> None:
         """showes what the board looks like if `record` it played."""
