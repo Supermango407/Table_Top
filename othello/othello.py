@@ -96,6 +96,9 @@ class Othello(Game):
                 self.skip_turn()
         else:
             self.turn_text.set_color(game_settings.piece_colors[self.turn])
+            
+            if self.players[self.turn].is_ai:
+                self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
 
     def get_winner(self):
         if self.no_valid_moves or len(self.table) >= 64:
@@ -140,22 +143,22 @@ class Othello(Game):
             if self.valid_move(move):
                 self.moves.append(move)
 
-    def play_move(self, position:Vector2):
-        self.place_piece(position)
-        super().play_move(position)
+    def play_move(self, move:Vector2):
+        self.place_piece(move)
+        super().play_move(move)
 
-    def record_move(self, position:Vector2):
+    def record_move(self, move:Vector2):
         self.history += Othello.colors[self.turn]
-        self.history += str(self.board.get_tile_index(position))
+        self.history += str(self.board.get_tile_index(move))
 
-    def valid_move(self, position:Vector2):
+    def valid_move(self, move:Vector2):
         # isn't valid if a piece is already there
-        if self.get_piece_at(position) != None:
+        if self.get_piece_at(move) != None:
             # print('Piece There')
             return False
         
         # isn't valid if it doesn't flip any pieces
-        if len(self.get_flip_pieces(position)) == 0:
+        if len(self.get_flip_pieces(move)) == 0:
             # print('None Flipped')
             return False
         

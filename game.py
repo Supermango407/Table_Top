@@ -54,10 +54,6 @@ class Game(Sprite):
         self.set_moves()
         self.turn_text.set_text(self.players[self.turn].name)
         
-        if self.game_running and self.players[self.turn].is_ai:
-            if len(self.moves) > 0:
-                self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
-     
     def play_move(self, move=None):
         """plays `move` by player whos turn it is.
         then checks to see if the game ended
@@ -68,11 +64,6 @@ class Game(Sprite):
         if winner == None:
             self.next_turn()
         else:
-            if type(winner) == int:
-                print(f"Player {winner+1} is the winner!")
-            else:
-                print('its a ', winner)
-        
             self.end_game(winner)
         
     def record_move(self, move=None) -> None:
@@ -95,6 +86,13 @@ class Game(Sprite):
 
     def end_game(self, winner:str) -> None:
         """ends the game, and returns to menu."""
+        if type(winner) == int:
+            self.turn_text.set_text(self.players[winner].name)
+            print(f"Player {winner+1} is the winner!")
+        else:
+            self.turn_text.set_text("Tie")
+            print('its a ', winner)
+        
         self.game_running = False
         data.save_record(self.name, self.players, winner, self.history)
         # print('-'*80)
@@ -108,3 +106,4 @@ class Game(Sprite):
     def show_game(self, record:str) -> None:
         """shows `record` of game played one move at a time."""
         pass
+

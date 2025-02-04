@@ -47,9 +47,18 @@ def check_events() -> None:
 
 def start_game(game:Game):
     global open_game
-    seed = 111
+    # seed = 1
+
+    # ties
+    # seed = 55
+    # seed = 98
+    seed = 117
+
+    # unfilled boards
+    # seed = 111
     # seed = 159
     # seed = 164
+    
     open_game = game(
         # Player("Player 1"),
         AI.Randy(seed),
@@ -90,7 +99,7 @@ def play_multi_games(game:Game):
 
 if __name__ == '__main__':
     # move window to second monitorf
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
+    # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
 
     # initiate window
     pygame.init()
