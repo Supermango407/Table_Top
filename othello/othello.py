@@ -91,6 +91,7 @@ class Othello(Game):
             if last_turn_skipped:
                 print('no valid moves')
                 self.no_valid_moves = True
+                self.end_game(self.get_winner())
             else:
                 self.skip_turn()
         else:

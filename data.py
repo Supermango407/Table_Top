@@ -36,12 +36,25 @@ def save_record(game_name:str, players_playing_game:tuple[Player], winner:str, r
 
     now = datetime.datetime.now(datetime.timezone.utc)
     conn = sqlite3.connect('data.db')
-    sql = f"INSERT INTO `game_records` VALUES (null, '{game_name}', '{','.join(player_ids)}', '{winner}', '{now}', '{record}');"
+    sql = f"""INSERT INTO 
+        `game_records`(
+            `game`,
+            `players`,
+            `winner`,
+            `date`,
+            `record`
+        ) 
+        VALUES (
+            '{game_name}',
+            '{','.join(player_ids)}',
+            '{winner}',
+            '{now}',
+            '{record}');
+    """
     
-    conn.execute(sql)
-    conn.commit()
-    conn.close()
+    # conn.execute(sql)
+    # conn.commit()
+    # conn.close()
 
 
 set_players()
-print(players)
