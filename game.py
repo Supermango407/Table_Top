@@ -20,29 +20,33 @@ class Game(Sprite):
 
         self.turn = -1
         self.table = None
+        self.display_game = True
+        # the current set up of the game
         self.history = ""
-        """the current set up of the game."""
 
         # `turn_text`: text of the player whose turn it is
-        self.turn_text = Text(
-            self.players[0].name,
-            anchor='top',
-            position=Vector2(GameObject.window.get_width()//2, 16),
-            color=(255, 255, 255)
-        )
+        if GameObject.window != None:
+            self.turn_text = Text(
+                self.players[0].name,
+                anchor='top',
+                position=Vector2(GameObject.window.get_width()//2, 16),
+                color=(255, 255, 255)
+            )
         
         self.game_running = False
         
         super().__init__()
 
-    def start_game(self):
+    def start_game(self, display_game=True):
+        self.display_game = display_game
         self.game_running = True
         self.turn = -1
         self.history = ''
         self.next_turn()
 
     def draw(self):
-        self.turn_text.draw()
+        if self.display_game:
+            self.turn_text.draw()
 
     def check_events(self, event) -> None:
         """checks for inputs eg: key press, mouse clicks, ect."""
@@ -52,7 +56,9 @@ class Game(Sprite):
         """move to the next player."""
         self.turn = (self.turn+1)%len(self.players)
         self.set_moves()
-        self.turn_text.set_text(self.players[self.turn].name)
+
+        if GameObject.window != None:
+            self.turn_text.set_text(self.players[self.turn].name)
         
     def play_move(self, move=None):
         """plays `move` by player whos turn it is.
@@ -87,11 +93,13 @@ class Game(Sprite):
     def end_game(self, winner:str) -> None:
         """ends the game, and returns to menu."""
         if type(winner) == int:
-            self.turn_text.set_text(self.players[winner].name)
-            print(f"Player {winner+1} is the winner!")
+            if GameObject.window != None:
+                self.turn_text.set_text(self.players[winner].name)
+            # print(f"Player {winner+1} is the winner!")
         else:
-            self.turn_text.set_text("Tie")
-            print('its a ', winner)
+            if GameObject.window != None:
+                self.turn_text.set_text("Tie")
+            # print('its a ', winner)
         
         self.game_running = False
         data.save_record(self.name, self.players, winner, self.history)

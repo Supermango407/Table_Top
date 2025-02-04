@@ -16,10 +16,6 @@ def start() -> None:
     GameObject.window = window
     GameObject.font = pygame.font.SysFont('Consolas', settings.font_size)
     
-    
-    # thread = threading.Thread(target=play_multi_games, args=(Othello,))
-    # thread.start()
-
     start_game(Othello)
 
 
@@ -47,12 +43,12 @@ def check_events() -> None:
 
 def start_game(game:Game):
     global open_game
-    # seed = 1
+    seed = 1
 
     # ties
     # seed = 55
     # seed = 98
-    seed = 117
+    # seed = 117
 
     # unfilled boards
     # seed = 111
@@ -77,24 +73,6 @@ def start_game(game:Game):
     
     # thread = threading.Thread(target=open_game.show_game, args=(game_record,))
     # thread.start()
-
-
-def play_multi_games(game:Game):
-    global open_game
-
-    for i in range(101, 201):
-        open_game = game(
-            # Player("Player 1"),
-            AI.Randy(i),
-            # Player("Player 2"),
-            AI.Randy(i),
-        )
-
-        print(i)
-        open_game.start_game()
-        print()
-
-        time.sleep(0)
 
 
 if __name__ == '__main__':

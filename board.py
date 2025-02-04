@@ -59,23 +59,24 @@ class Board(Sprite):
         super().__init__()
 
     def set_position(self):
-        # set `x` base on `self.anchor` and `self.offset`
-        if 'left' in self.anchor:
-            x = self.offset.x
-        elif 'right' in self.anchor:
-            x = self.offset.x+self.window.get_width()-self.board_width
-        else:
-            x = self.offset.x+self.window.get_width()//2-self.board_width//2
+        if GameObject.window != None:
+            # set `x` base on `self.anchor` and `self.offset`
+            if 'left' in self.anchor:
+                x = self.offset.x
+            elif 'right' in self.anchor:
+                x = self.offset.x+self.window.get_width()-self.board_width
+            else:
+                x = self.offset.x+self.window.get_width()//2-self.board_width//2
+                
+            # set `y` base on `self.anchor`
+            if 'top' in self.anchor:
+                y = self.offset.y
+            elif 'bottom' in self.anchor:
+                y = self.offset.y+self.window.get_height()-self.board_height
+            else:
+                y = self.offset.y+self.window.get_height()//2-self.board_height//2
             
-        # set `y` base on `self.anchor`
-        if 'top' in self.anchor:
-            y = self.offset.y
-        elif 'bottom' in self.anchor:
-            y = self.offset.y+self.window.get_height()-self.board_height
-        else:
-            y = self.offset.y+self.window.get_height()//2-self.board_height//2
-        
-        self.position = Vector2(x, y)
+            self.position = Vector2(x, y)
 
     def draw(self) -> None:
         # TODO fix misaligned border

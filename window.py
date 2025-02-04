@@ -36,7 +36,7 @@ class Sprite(GameObject):
     
     def update(self):
         super().update()
-        if not self.hidden:
+        if GameObject.window != None and not self.hidden:
             self.draw()
 
     def draw(self) -> None:

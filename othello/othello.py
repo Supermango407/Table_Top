@@ -61,10 +61,10 @@ class Othello(Game):
         ]
         self.table = []
 
-    def start_game(self):
+    def start_game(self, display_game=True):
         self.set_board()
         self.no_valid_moves = False
-        super().start_game()
+        super().start_game(display_game)
 
     def update(self):
         super().update()
@@ -89,13 +89,14 @@ class Othello(Game):
         super().next_turn()
         if len(self.moves) == 0:
             if last_turn_skipped:
-                print('no valid moves')
+                # print('no valid moves')
                 self.no_valid_moves = True
                 self.end_game(self.get_winner())
             else:
                 self.skip_turn()
         else:
-            self.turn_text.set_color(game_settings.piece_colors[self.turn])
+            if GameObject.window != None:
+                self.turn_text.set_color(game_settings.piece_colors[self.turn])
             
             if self.players[self.turn].is_ai:
                 self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
@@ -119,7 +120,7 @@ class Othello(Game):
 
     def skip_turn(self):
         """skips the turn of the current player."""
-        print('turn skipped')
+        # print('turn skipped')
         self.next_turn(True)
 
     def check_events(self, event):
