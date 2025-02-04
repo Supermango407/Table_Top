@@ -35,9 +35,18 @@ def save_record(game_name:str, players_playing_game:tuple[Player], winner:str, r
             '{now}',
             '{record}');
     """
+<<<<<<< HEAD
     # print(sql)
 
     conn.execute(sql)
     conn.commit()
     conn.close()
 
+=======
+    print(sql)
+
+    # conn.execute(sql)
+    # conn.commit()
+    # conn.close()
+
+>>>>>>> 089367333e4277a225f59c726190c8516e77c648

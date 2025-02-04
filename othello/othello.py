@@ -46,12 +46,13 @@ class Othello(Game):
 
     def __init__(self, *players:tuple[Player]):
         super().__init__("Othello", *players)
-        self.board = Board(
-            tile_size=game_settings.board['tile_size'],
-            tile_border_width=game_settings.board['border_width'],
-            tile_colors=game_settings.board['baground_color'],
-            tile_border_color=game_settings.board['border_color']
-        )
+        if GameObject.window != None:
+            self.board = Board(
+                tile_size=game_settings.board['tile_size'],
+                tile_border_width=game_settings.board['border_width'],
+                tile_colors=game_settings.board['baground_color'],
+                tile_border_color=game_settings.board['border_color']
+            )
         
         self.start_table = [
             Piece(Othello.colors[0], Vector2(3, 3), self.board, True),
