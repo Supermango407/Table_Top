@@ -8,6 +8,7 @@ import sys
 sys.path.append('../table_top')
 import othello.game_settings as game_settings
 from game import Game
+import ai as AI
 from board import Board
 from window import GameObject, Sprite
 from player import Player
@@ -46,13 +47,12 @@ class Othello(Game):
 
     def __init__(self, *players:tuple[Player]):
         super().__init__("Othello", *players)
-        if GameObject.window != None:
-            self.board = Board(
-                tile_size=game_settings.board['tile_size'],
-                tile_border_width=game_settings.board['border_width'],
-                tile_colors=game_settings.board['baground_color'],
-                tile_border_color=game_settings.board['border_color']
-            )
+        self.board = Board(
+            tile_size=game_settings.board['tile_size'],
+            tile_border_width=game_settings.board['border_width'],
+            tile_colors=game_settings.board['baground_color'],
+            tile_border_color=game_settings.board['border_color']
+        )
         
         self.start_table = [
             Piece(Othello.colors[0], Vector2(3, 3), self.board, True),
@@ -62,10 +62,10 @@ class Othello(Game):
         ]
         self.table = []
 
-    def start_game(self, display_game=True):
+    def start_game(self, save_record=False):
         self.set_board()
         self.no_valid_moves = False
-        super().start_game(display_game)
+        super().start_game(save_record)
 
     def update(self):
         super().update()
@@ -100,7 +100,7 @@ class Othello(Game):
                 self.turn_text.set_color(game_settings.piece_colors[self.turn])
             
             if self.players[self.turn].is_ai:
-                self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
+                self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self)])
 
     def get_winner(self):
         if self.no_valid_moves or len(self.table) >= 64:
@@ -271,10 +271,41 @@ class Othello(Game):
         tile_pos = self.board.get_tile_from_index(int(move_string[1:]))
         self.place_piece(tile_pos)
 
+    def end_game(self, winner):
+        if GameObject.window != None:
+            if type(winner) == int:
+                self.turn_text.set_color(game_settings.piece_colors[winner])
+            elif type(winner) == str:
+                self.turn_text.set_color(game_settings.tie_color)
+
+        super().end_game(winner)
+
     def debug_print_table(self):
         """prints the table to the console."""
         print('-'*80)
         for piece in self.table:
             print('\t', piece.position)
         print('-'*80)
+
+
+class Immanuel(AI.Immanuel):
+
+    def calculate_move(self, options:list[Vector2], game:Othello):
+        biggest_move = 0
+        moves = []
+
+        for i, move in enumerate(options):
+            # how many pieces will be flipped
+            flip_count = len(game.get_flip_pieces(move))
+            if flip_count > biggest_move:
+                biggest_move = flip_count
+                moves = [i]
+            elif flip_count == biggest_move:
+                moves.append(i)
+        
+        # for move in moves:
+        #     print(options[move])
+        # print()
+
+        return self.generator.choice(moves)
 

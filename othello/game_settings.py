@@ -7,3 +7,5 @@ board = {
 
 piece_colors = ((0, 0, 0),(255, 255, 255))
 piece_size = 24
+
+tie_color = (127, 127, 127)

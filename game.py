@@ -9,18 +9,19 @@ from player import Player
 class Game(Sprite):
     """the Table_Top games class."""
 
-    def __init__(self, name:str, *players:tuple[Player]):
+    def __init__(self, name:str, *players:tuple[Player], save_record=False):
         """
         `name`: the name of the game.
         `players`: the players playing.
+        `save_record`: if True will save game to Database.
         """
 
         self.name = name
         self.players = players
+        self.save_record = save_record
 
         self.turn = -1
         self.table = None
-        self.display_game = True
         # the current set up of the game
         self.history = ""
 
@@ -37,16 +38,15 @@ class Game(Sprite):
         
         super().__init__()
 
-    def start_game(self, display_game=True):
-        self.display_game = display_game
+    def start_game(self, save_record=False):
         self.game_running = True
+        self.save_record = save_record
         self.turn = -1
         self.history = ''
         self.next_turn()
 
     def draw(self):
-        if self.display_game:
-            self.turn_text.draw()
+        self.turn_text.draw()
 
     def check_events(self, event) -> None:
         """checks for inputs eg: key press, mouse clicks, ect."""
@@ -102,7 +102,11 @@ class Game(Sprite):
             # print('its a ', winner)
         
         self.game_running = False
-        data.save_record(self.name, self.players, winner, self.history)
+        if self.save_record:
+            data.save_record(self.name, self.players, winner, self.history)
+        
+        if GameObject.window == None:
+            self.destroy()
         # print('-'*80)
         # print(self.history)
         # print('-'*80)

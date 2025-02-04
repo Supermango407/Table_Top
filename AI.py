@@ -19,8 +19,8 @@ class Game_AI(Player):
         # the name that will be saved in database.
         self.record_name = f"{name}({','.join(data)})"
 
-    def calculate_move(self, options:list, table:dict) -> int:
-        """pick move from `options` based on `table`, then returns the index."""
+    def calculate_move(self, options:list, game) -> int:
+        """pick move from `options` for `game`, then returns the index."""
         return 0
 
 
@@ -36,7 +36,23 @@ class Randy(Game_AI):
         self.generator = random.Random(self.seed)
         super().__init__(f"RANDY", "The Random", (str(self.seed),))
 
-    def calculate_move(self, options, table):
-        move = self.generator.randint(0, len(options)-1)
+    def calculate_move(self, options, game):
+        move = self.generator.choice(range(len(options)))
         return move
+
+
+class Immanuel(Game_AI):
+    """does whatever move looks best in the moment, without thinking about the future."""
+
+    def __init__(self, seed=None):
+        if seed == None:
+            self.seed = random.randint(0, 1000000000)
+        else:
+            self.seed = seed
+
+        self.generator = random.Random(self.seed)
+        super().__init__(f"IMMANUEL", "The Impulsive", (str(self.seed),))
+
+    def calculate_move(self, options, game):
+        print('no game selected')
 

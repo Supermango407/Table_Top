@@ -4,7 +4,7 @@ import time
 import os
 import settings
 from game import Game
-from othello.othello import Othello
+from othello.othello import Othello, Immanuel
 from window import GameObject, Sprite
 from board import Board
 from player import Player
@@ -43,12 +43,12 @@ def check_events() -> None:
 
 def start_game(game:Game):
     global open_game
-    seed = 1
+    # seed = 1
 
     # ties
     # seed = 55
     # seed = 98
-    # seed = 117
+    seed = 117
 
     # unfilled boards
     # seed = 111
