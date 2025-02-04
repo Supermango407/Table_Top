@@ -3,21 +3,6 @@ import datetime
 from player import Player
 
 
-players = dict()
-
-
-def set_players():
-    global player_names
-    conn = sqlite3.connect('data.db')
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM `players`")
-
-    rows = cursor.fetchall()
-    for row in rows:
-        players[row[1]] = row[0]
-
-    conn.close()
-
 
 def save_record(game_name:str, players_playing_game:tuple[Player], winner:str, record:str):
     """
@@ -26,13 +11,12 @@ def save_record(game_name:str, players_playing_game:tuple[Player], winner:str, r
     `winner`: the turn index of the winner.
     `record`: the record (aka history) of game played.
     """
-    player_ids = []
-    for player in players_playing_game:
-        if player.is_ai:
-            player_name = player.name.upper()
-        else:
-            player_name = player.name.lower()
-        player_ids.append(str(players[player_name]))
+    # gets the player names and ai record names if ai is used
+    player_names = [
+        player.record_name if player.is_ai 
+        else player.name.lower() 
+        for player in players_playing_game
+    ]
 
     now = datetime.datetime.now(datetime.timezone.utc)
     conn = sqlite3.connect('data.db')
@@ -46,15 +30,14 @@ def save_record(game_name:str, players_playing_game:tuple[Player], winner:str, r
         ) 
         VALUES (
             '{game_name}',
-            '{','.join(player_ids)}',
+            '{','.join(player_names)}',
             '{winner}',
             '{now}',
             '{record}');
     """
-    
+    print(sql)
+
     # conn.execute(sql)
     # conn.commit()
     # conn.close()
 
-
-set_players()
