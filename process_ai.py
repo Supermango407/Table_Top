@@ -5,34 +5,34 @@ from othello.othello import Othello, Immanuel
 
 
 # how many games each proccesser handels (1/4 games total)
-games_per_proccesser = 250
+games_played = 100
 seed_start_index = 0
 winner_options = ['0', 'tie', '1']
 
-# AIs
+# Settings
+processers = 4
 ais = (
     Immanuel,
     AI.Randy,
 )
+game = Othello()
 
-
-def proccess_game(proccesser:int):
-    if proccesser % 2 == 0:
-        ai_list = ais
-    else:
-        ai_list = (ais[1], ais[0])
+def process_game(processer:int):
+    print(f"Processer {processer} started")
     
-    for i in range(games_per_proccesser):
-        seed = proccesser+(i*4)+seed_start_index
-        game = Othello(
-            ai_list[0](seed),
-            ai_list[1](seed),
-        )
+    for i in range(games_played//processers):
+        seed = processer+(i*processers)+seed_start_index
+        if processer % 2 == 0:
+            players = (ais[0](seed), ais[1](seed))
+        else:
+            players = (ais[1](seed), ais[0](seed))
 
         if seed % 25 == 0:
             print(seed)
 
-        game.start_game(True)
+        game.start_game(*players)
+    
+    print(f"Processer {processer} finished")
 
 
 def analize_winrate(players:tuple):
@@ -65,12 +65,16 @@ def skill_score(winrate:dict):
         return 1 - winrate['1']/winrate['0']
 
 
-winrate = analize_winrate(ais)
-print(winrate)
-print(skill_score(winrate))
+# winrate = analize_winrate(ais)
+# print(winrate)
+# print(skill_score(winrate))
 
-# if __name__ == '__main__':
-    # items = [1, 2, 3, 4]
-    # with Pool(processes=4) as pool:
-    #     pool.map(proccess_game, items)
+if __name__ == '__main__':
+    if processers > 1:
+        items = list(range(1, processers+1))
+        print(items)
+        with Pool(processes=4) as pool:
+            pool.map(process_game, items)
+    else:
+        process_game(1)
 

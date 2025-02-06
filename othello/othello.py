@@ -3,7 +3,6 @@ import threading
 import time
 from pygame import Vector2
 from dataclasses import dataclass
-import os
 import sys
 sys.path.append('../table_top')
 import othello.game_settings as game_settings
@@ -51,10 +50,10 @@ class Othello(Game):
 
         self.table = Table(-1, [])
 
-    def start_game(self, save_record=False):
+    def start_game(self, *players:tuple[Player], save_record=False):
         self.set_board()
         self.no_valid_moves = False
-        super().start_game(save_record)
+        super().start_game(*players, save_record=save_record)
 
     def update(self):
         super().update()
@@ -235,28 +234,6 @@ class Othello(Game):
         for piece in self.table.pieces:
             print('\t', piece.position)
         print('-'*80)
-
-
-class Immanuel(AI.Immanuel):
-
-    def calculate_move(self, options:list[Vector2], table):
-        biggest_move = 0
-        moves = []
-
-        for i, move in enumerate(options):
-            # how many pieces will be flipped
-            flip_count = len(get_flip_pieces(move, table))
-            if flip_count > biggest_move:
-                biggest_move = flip_count
-                moves = [i]
-            elif flip_count == biggest_move:
-                moves.append(i)
-        
-        # for move in moves:
-        #     print(options[move])
-        # print()
-
-        return self.generator.choice(moves)
 
 
 def valid_move(move:Move, table:Table) -> bool:

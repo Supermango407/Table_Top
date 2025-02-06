@@ -4,11 +4,11 @@ import time
 import os
 import settings
 from game import Game
-from othello.othello import Othello, Immanuel
+from othello.othello import Othello
 from window import GameObject, Sprite
 from board import Board
 from player import Player
-import ai as AI
+import othello.othello_ais as AI
 
 
 def start() -> None:
@@ -43,7 +43,8 @@ def check_events() -> None:
 
 def start_game(game:Game):
     global open_game
-    seed = 1
+    open_game = game()
+    seed = 9947
 
     # ties
     # seed = 55
@@ -57,13 +58,12 @@ def start_game(game:Game):
     
     players = (
         # Player("Player 1"),
-        AI.Randy(seed),
+        AI.Immanuel(seed),
         # Player("Player 2"),
         AI.Randy(seed),
     )
 
-    open_game = game(*players)
-    open_game.start_game()
+    open_game.start_game(*players)
 
     # game_record = 'B43W26B19W42B37W38B33W44B49W10B12W18B2W25B53W34B30W5B39W32B24W62B51W41B40W46B55W48B56W45B50W17B61W3B16W20B13W14B1W57B58W54B21W0B6W29B4W7B47W9B63W23B22W11B8W60B59W31B15W52'
     # game_record = 'B43W26B20W45B44W42B34W12B13W19B18W25B32W10B52W59B17W51B4W11B41W6B3W48B50W40B21W29B38W16B24W57B49W58B14W47B61W22B15W5B7W60B46W1B56W37B39W23B53W33B9W55B54W8B63W62B30W31B0B2'

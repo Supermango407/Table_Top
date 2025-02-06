@@ -16,7 +16,7 @@ class Game_Table(object):
 class Game(Sprite):
     """the Table_Top games class."""
 
-    def __init__(self, name:str, *players:tuple[Player], save_record=False):
+    def __init__(self, name:str, save_record=False):
         """
         `name`: the name of the game.
         `players`: the players playing.
@@ -24,7 +24,7 @@ class Game(Sprite):
         """
 
         self.name = name
-        self.players = players
+        self.players = []
         self.save_record = save_record
 
         self.table:Game_Table = Game_Table(turn=-1)
@@ -34,7 +34,7 @@ class Game(Sprite):
         # `turn_text`: text of the player whose turn it is
         if GameObject.window != None:
             self.turn_text = Text(
-                self.players[0].name,
+                "",
                 anchor='top',
                 position=Vector2(GameObject.window.get_width()//2, 16),
                 color=(255, 255, 255)
@@ -44,8 +44,9 @@ class Game(Sprite):
         
         super().__init__()
 
-    def start_game(self, save_record=False):
+    def start_game(self, *players:tuple[Player], save_record=False):
         self.game_running = True
+        self.players = players
         self.table.turn = -1
         self.save_record = save_record
         self.history = ''
