@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pygame
 from pygame import Vector2
 from typing import Union
@@ -5,6 +6,7 @@ from window import GameObject, Sprite
 
 
 class Board(Sprite):
+    
     def __init__(self, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None):
         """
         `anchor`: where the board is placed on the screen eg:
@@ -46,6 +48,8 @@ class Board(Sprite):
             self.tile_border_color = color
         else:
             self.tile_border_color = tile_border_color
+
+        self.pieces:dict[Piece] = dict()
 
         # set the board width and height
         self.board_width = self.tile_count[0]*self.tile_size + self.tile_border_width*(self.tile_count[0]-1)
@@ -106,8 +110,31 @@ class Board(Sprite):
                 pygame.draw.rect(self.window, self.tile_border_color, (self.position.x, y_pos_on, self.board_width, self.tile_border_width))
                 y_pos_on += self.tile_spacing
 
+    def place_piece(self, tile:Vector2, piece:Piece=None, piece_color:tuple[int, int, int]=(127, 127, 127)) -> bool:
+        """places `piece` on `tile` if `tile` is empty.
+            if `piece` is left None it will create a new Piece with `color`.
+            returns True if successful, else returns False."""
+        tile_index = self.get_tile_index(tile)
+
+        # if there's' alread a piece there, return False
+        # else place Peice and return True
+        if self.pieces.get(tile_index):
+            return False
+        
+        if piece == None:
+            self.pieces[tile_index] = Piece(tile, self, piece_color)
+        else:
+            piece.board = self
+            self.pieces[tile_index] = piece
+        
+        return True
+
+    def get_piece_on(self, tile:Vector2) -> Piece:
+        """returns piece on `tile` if it exsits, else returns None."""
+        return self.pieces[self.get_tile_index(tile)]
+
     def get_tile_at(self, position:Vector2) -> Vector2:
-        """returns index of tile at `positions` if it exists"""
+        """returns tile at global `position` if it exists"""
         position -= self.position
 
         # return None of not over board
@@ -128,18 +155,42 @@ class Board(Sprite):
                 tiles.append(Vector2(x, y))
         return tiles
 
-    def get_global_position(self, position:Vector2) -> Vector2:
+    def get_global_position(self, tile:Vector2) -> Vector2:
         """returns the global postion of `position`"""
-        return self.position + Vector2(1, 1)*self.tile_size//2 + position*self.tile_spacing
+        return self.position + Vector2(1, 1)*self.tile_size//2 + tile*self.tile_spacing
     
-    def get_tile_index(self, position:Vector2) -> int:
+    def get_tile_index(self, tile:Vector2) -> int:
         """returns what number `position` is
         when look through the tiles left to right, then up to down"""
-        return int(position.y*self.tile_count[0] + position.x)
+        return int(tile.y*self.tile_count[0] + tile.x)
 
-    def get_tile_from_index(self, index:int):
+    def get_tile_from_index(self, index:int) -> Vector2:
         """returns the local postion of tile at `index`"""
         x = index%self.tile_count[0]
         y = (index-x)//self.tile_count[0]
         return Vector2(x, y)
 
+
+class Piece(Sprite):
+    """sprites that can be placed on boards, but only one per tile."""
+
+    def __init__(self, tile:Vector2, board:Board, color:tuple[int, int, int], hidden=False):
+        """
+        `position`: where on board piece is placed.
+        `board`: the board the Piece is placed on.
+        `color`: the color of the piece.
+        `hidden`: if true, sprite will not be drawn to screen.
+        """
+        self.tile = tile
+        self.board = board
+        self.color = color
+        super().__init__(hidden)
+
+    def draw(self):
+        if self.board != None:
+            pygame.draw.circle(
+                GameObject.window,
+                self.color,
+                self.board.get_global_position(self.tile),
+                self.board.tile_size*0.4,
+            )

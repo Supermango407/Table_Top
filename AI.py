@@ -19,7 +19,7 @@ class Game_AI(Player):
         # the name that will be saved in database.
         self.record_name = f"{name}({','.join(data)})"
 
-    def calculate_move(self, options:list, game) -> int:
+    def calculate_move(self, options:list, table) -> int:
         """pick move from `options` for `game`, then returns the index."""
         return 0
 
@@ -36,7 +36,7 @@ class Randy(Game_AI):
         self.generator = random.Random(self.seed)
         super().__init__(f"RANDY", "The Random", (str(self.seed),))
 
-    def calculate_move(self, options, game):
+    def calculate_move(self, options, table):
         move = self.generator.choice(range(len(options)))
         return move
 
@@ -53,6 +53,6 @@ class Immanuel(Game_AI):
         self.generator = random.Random(self.seed)
         super().__init__(f"IMMANUEL", "The Impulsive", (str(self.seed),))
 
-    def calculate_move(self, options, game):
+    def calculate_move(self, options, table):
         print('no game selected')
 

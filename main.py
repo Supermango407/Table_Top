@@ -56,10 +56,10 @@ def start_game(game:Game):
     # seed = 164
     
     open_game = game(
-        # Player("Player 1"),
-        AI.Randy(seed),
+        Player("Player 1"),
+        Immanuel(seed),
         # Player("Player 2"),
-        AI.Randy(seed),
+        # AI.Randy(seed),
     )
     open_game.start_game()
 

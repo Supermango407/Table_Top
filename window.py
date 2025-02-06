@@ -1,10 +1,11 @@
+from __future__ import annotations
 import pygame
 from pygame import Vector2
 
 
 class GameObject(object):
     """basic object with an update start and window"""
-    childeren = []
+    childeren:list[GameObject] = []
     window:pygame.Surface = None
     font:pygame.font.Font = None
 
@@ -24,7 +25,7 @@ class GameObject(object):
 
 class Sprite(GameObject):
     """GameOjbects that are drawn to the screen"""
-    childeren = []
+    childeren:list[Sprite] = []
 
     def __init__(self, hidden=False):
         """
