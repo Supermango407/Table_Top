@@ -8,6 +8,19 @@ from player import Player
 
 
 @dataclass
+class GameVars(object):
+    """the game varables for each game.
+        `name`: the name of the game.
+        `players`: how many players can play this game.
+            use int if there only one option.
+            use tuple if there are multiple options.
+    """
+    name:str
+    players:Union[int, tuple[int]]
+    # TODO: add image var
+
+
+@dataclass
 class Game_Table(object):
     """class with basic Game vars"""
     turn:int
@@ -15,17 +28,11 @@ class Game_Table(object):
 
 class Game(Sprite):
     """the Table_Top games class."""
+    game_vars:GameVars = GameVars("GAME_PARENT_CLASS", 0)
 
-    def __init__(self, name:str, save_record=False):
-        """
-        `name`: the name of the game.
-        `players`: the players playing.
-        `save_record`: if True will save game to Database.
-        """
-
-        self.name = name
+    def __init__(self):
         self.players = []
-        self.save_record = save_record
+        self.save_record = False
 
         self.table:Game_Table = Game_Table(turn=-1)
         # the current set up of the game
@@ -104,7 +111,7 @@ class Game(Sprite):
         """sets the turn_text, if it exsists, to the Winner of game."""
         if GameObject.window != None:
             if type(winner) == int:
-                self.turn_text.set_text(self.players[winner].name)
+                self.turn_text.set_text(self.players[winner].name+" Wins")
             elif type(winner) == str:
                 self.turn_text.set_text(winner)
 
@@ -113,7 +120,7 @@ class Game(Sprite):
         self.set_winner_text(winner)
         self.game_running = False
         if self.save_record:
-            data.save_record(self.name, self.players, winner, self.history)
+            data.save_record(self.game_vars.name, self.players, winner, self.history)
         
         if GameObject.window == None:
             self.destroy()

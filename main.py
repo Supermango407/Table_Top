@@ -44,7 +44,7 @@ def check_events() -> None:
 def start_game(game:Game):
     global open_game
     open_game = game()
-    seed = 9947
+    seed = 9945
 
     # ties
     # seed = 55

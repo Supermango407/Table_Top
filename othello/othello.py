@@ -6,7 +6,7 @@ from dataclasses import dataclass
 import sys
 sys.path.append('../table_top')
 import othello.game_settings as game_settings
-from game import Game, Game_Table
+from game import Game, Game_Table, GameVars
 import ai as AI
 from board import Board, Piece
 from window import GameObject, Sprite
@@ -30,6 +30,7 @@ class Othello_Piece(Piece):
         self.player = player
         super().__init__(tile, None, game_settings.piece_colors[player], False)
 
+    # TODO: Add flip animation
     def flip(self):
         """flips the piece and gives it to the other player."""
         self.player = 1 if self.player == 0 else 0
@@ -37,10 +38,11 @@ class Othello_Piece(Piece):
 
 
 class Othello(Game):
+    game_vars:GameVars = GameVars("othello", 2)
     colors:tuple[str, str] = ('B', 'W')
 
-    def __init__(self, *players:tuple[Player]):
-        super().__init__("Othello", *players)
+    def __init__(self):
+        super().__init__()
         self.board = Board(
             tile_size=game_settings.board['tile_size'],
             tile_border_width=game_settings.board['border_width'],
