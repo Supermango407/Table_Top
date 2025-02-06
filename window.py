@@ -70,9 +70,11 @@ class Text(object):
         self.set_anchor(anchor)
 
     def set_text(self, value:str):
-         """sets value of text"""
-         self.value = value
-         self.text = GameObject.font.render(self.value, True, self.color)
+        """sets value of text"""
+        self.value = value
+        self.text = GameObject.font.render(self.value, True, self.color)
+        self.text_rect = self.text.get_rect()
+        self.set_anchor(self.get_anchor())
 
     def set_color(self, color:tuple[int, int, int]):
          """sets color of text"""
@@ -84,16 +86,16 @@ class Text(object):
         self._anchor = new_anchor
 
         if 'top' in new_anchor:
-                self.text_rect.top = self.position[1]
+            self.text_rect.top = self.position[1]
         elif 'bottom' in new_anchor:
-                self.text_rect.bottom = self.position[1]
+            self.text_rect.bottom = self.position[1]
         else:
              self.text_rect.centery = self.position[1]
         
         if 'left' in new_anchor:
-                self.text_rect.left = self.position[0]
+            self.text_rect.left = self.position[0]
         elif 'right' in new_anchor:
-                self.text_rect.right = self.position[0]
+            self.text_rect.right = self.position[0]
         else:
              self.text_rect.centerx = self.position[0]
 

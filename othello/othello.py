@@ -7,11 +7,16 @@ import os
 import sys
 sys.path.append('../table_top')
 import othello.game_settings as game_settings
-from game import Game
+from game import Game, Game_Table
 import ai as AI
 from board import Board, Piece
 from window import GameObject, Sprite
 from player import Player
+
+
+@dataclass
+class Table(Game_Table):
+    pieces:list[Piece]
 
 
 @dataclass
@@ -44,8 +49,7 @@ class Othello(Game):
             tile_border_color=game_settings.board['border_color']
         )
 
-        self.start_table = []
-        self.table = []
+        self.table = Table(-1, [])
 
     def start_game(self, save_record=False):
         self.set_board()
@@ -57,16 +61,16 @@ class Othello(Game):
 
     def draw(self):
         super().draw()
-        for piece in self.table:
+        for piece in self.table.pieces:
             piece.draw()
 
     def set_board(self) -> None:
         """sets up the board in the starting position"""
         # delete previuos game if it exsists
-        if len(self.table) > 0:
-            for piece in self.table:
+        if len(self.table.pieces) > 0:
+            for piece in self.table.pieces:
                 piece.destroy()
-            self.table = []
+            self.table.pieces = []
 
 
         self.place_piece(Vector2(3, 3), 0)
@@ -84,21 +88,24 @@ class Othello(Game):
             else:
                 self.skip_turn()
         else:
-            if GameObject.window != None:
-                self.turn_text.set_color(game_settings.piece_colors[self.turn])
-            
-            if self.players[self.turn].is_ai:
-                self.play_move(self.moves[self.players[self.turn].calculate_move(self.moves, self.table)])
+            self.set_turn_color(self.table.turn)
+            if self.players[self.table.turn].is_ai:
+                self.play_move(self.moves[self.players[self.table.turn].calculate_move(self.moves, self.table)])
+
+    def set_turn_color(self, player:int) -> None:
+        """sets the color of Turn Text, if it exsits, to `player`'s color."""
+        if GameObject.window != None:
+            self.turn_text.set_color(game_settings.piece_colors[player])
 
     def valid_move(self, move:Move):
         return valid_move(move, self.table)
 
     def get_winner(self):
-        if self.no_valid_moves or len(self.table) >= 64:
+        if self.no_valid_moves or len(self.table.pieces) >= 64:
             player_pieces = [0, 0]
 
             # count the number of pieces for each player
-            for piece in self.table:
+            for piece in self.table.pieces:
                 player_pieces[piece.player] += 1
             
             if player_pieces[0] > player_pieces[1]:
@@ -117,10 +124,10 @@ class Othello(Game):
 
     def check_events(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1 and not self.players[self.turn].is_ai:
+            if event.button == 1 and not self.players[self.table.turn].is_ai:
                 tile_pos = self.board.get_tile_at(pygame.mouse.get_pos())
                 if tile_pos != None:
-                    move = Move(tile_pos, self.turn)
+                    move = Move(tile_pos, self.table.turn)
                     if self.valid_move(move):
                         self.play_move(move)
         elif event.type == pygame.KEYUP:
@@ -134,7 +141,7 @@ class Othello(Game):
 
         # delete the moves that arent valid
         for tile in tiles:
-            move = Move(tile, self.turn)
+            move = Move(tile, self.table.turn)
             # if a peice is already there its not valid.
             if self.valid_move(move):
                 self.moves.append(move)
@@ -144,16 +151,16 @@ class Othello(Game):
         super().play_move(move)
 
     def record_move(self, move:Move):
-        self.history += Othello.colors[self.turn]
+        self.history += Othello.colors[self.table.turn]
         self.history += str(self.board.get_tile_index(move.tile))
 
     def place_piece(self, tile:Vector2, player:int) -> None:
         """places a peice on the board"""
         piece = Othello_Piece(tile, player)
         self.board.place_piece(tile, piece)
-        self.table.append(piece)
+        self.table.pieces.append(piece)
         
-        for piece in get_flip_pieces(Move(tile, self.turn), self.table):
+        for piece in get_flip_pieces(Move(tile, player), self.table):
             piece.flip()
 
     def split_record(self, record:str) -> list[str]:
@@ -175,41 +182,57 @@ class Othello(Game):
         
         return moves
 
-    def show_record(self, record):
-        self.set_board()
+    def show_record(self, players, record:str):
+        self.players = players
         moves = self.split_record(record)
+        self.set_board()
 
         for move_string in moves:
             self.play_move_string(move_string)
 
-    def show_game(self, record):
+        self.no_valid_moves = True
+        self.set_winner_text(self.get_winner())
+
+    def show_game(self, players, record):
+        self.players = players
         moves = self.split_record(record)
-        
         self.set_board()
+
+        self.set_turn_text(0)
+        self.set_turn_color(0)
+        
         for move in moves:
             time.sleep(0.1)
+            self.set_turn_text(self.table.turn)
+            self.set_turn_color(self.table.turn)
             self.play_move_string(move)
+        
+        self.no_valid_moves = True
+        self.set_winner_text(self.get_winner())
 
     def play_move_string(self, move_string:str) -> None:
         """playes move based off `move_string`"""
         player = move_string[0]
-        self.turn = Othello.colors.index(player)
+        self.table.turn = Othello.colors.index(player)
         tile_pos = self.board.get_tile_from_index(int(move_string[1:]))
-        self.place_piece(tile_pos)
+        self.place_piece(tile_pos, self.table.turn)
 
-    def end_game(self, winner):
+    def set_winner_text(self, winner) -> None:
+        super().set_winner_text(winner)
         if GameObject.window != None:
             if type(winner) == int:
                 self.turn_text.set_color(game_settings.piece_colors[winner])
             elif type(winner) == str:
                 self.turn_text.set_color(game_settings.tie_color)
 
+    def end_game(self, winner):
+        self.set_winner_text(winner)
         super().end_game(winner)
 
     def debug_print_table(self):
         """prints the table to the console."""
         print('-'*80)
-        for piece in self.table:
+        for piece in self.table.pieces:
             print('\t', piece.position)
         print('-'*80)
 
@@ -236,7 +259,7 @@ class Immanuel(AI.Immanuel):
         return self.generator.choice(moves)
 
 
-def valid_move(move:Move, table:list[Piece]):
+def valid_move(move:Move, table:Table) -> bool:
     # isn't valid if a piece is already there
     if get_piece_at(move.tile, table) != None:
         # print('Piece There')
@@ -250,15 +273,15 @@ def valid_move(move:Move, table:list[Piece]):
     return True
 
 
-def get_piece_at(position:Vector2, table:list[Piece]):
-    for piece in table:
+def get_piece_at(position:Vector2, table:Table) -> Piece:
+    for piece in table.pieces:
         if piece.tile == position:
             return piece
         
     return None
 
 
-def get_flip_pieces(move:Move, table:list[Piece]) -> list[Piece]:
+def get_flip_pieces(move:Move, table:Table) -> list[Piece]:
         """reutrns a list of pieces that will flip if a peice is placed at `position`"""
         pieces = [] # the reutrn value
         # `direction_offets`: the amount you add for each direcion

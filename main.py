@@ -43,24 +43,26 @@ def check_events() -> None:
 
 def start_game(game:Game):
     global open_game
-    # seed = 1
+    seed = 1
 
     # ties
     # seed = 55
     # seed = 98
-    seed = 117
+    # seed = 117
 
     # unfilled boards
     # seed = 111
     # seed = 159
     # seed = 164
     
-    open_game = game(
-        Player("Player 1"),
-        Immanuel(seed),
+    players = (
+        # Player("Player 1"),
+        AI.Randy(seed),
         # Player("Player 2"),
-        # AI.Randy(seed),
+        AI.Randy(seed),
     )
+
+    open_game = game(*players)
     open_game.start_game()
 
     # game_record = 'B43W26B19W42B37W38B33W44B49W10B12W18B2W25B53W34B30W5B39W32B24W62B51W41B40W46B55W48B56W45B50W17B61W3B16W20B13W14B1W57B58W54B21W0B6W29B4W7B47W9B63W23B22W11B8W60B59W31B15W52'
@@ -71,8 +73,10 @@ def start_game(game:Game):
     # game_record = "B34W44B53W33B41W26B17W19B20W49B11W62B18W37B52W3B54W8B25W21B22W60B38W43B40W39B45W55B31W23B16W46B13W5B48W12B0W30B57W24B50W10B32W51B29W42B59W58B4W2B6W56B9W1B61W14B15W7B63B47"
     # game_record = "B34W26B18W25B32W41B19W12B17W24B20W9B16W44B42W8B40W49B50W43B45W37B4W13B22W52B10W11B3W53B2W51B59W58B62W61B29W14B6W48B46W54B56W33B5W30B0W63B57W55B23W60B1W31B47W38B21W7B15W39"
     
-    # thread = threading.Thread(target=open_game.show_game, args=(game_record,))
+    # thread = threading.Thread(target=open_game.show_game, args=(players, game_record))
     # thread.start()
+
+    # open_game.show_record(players, game_record)
 
 
 if __name__ == '__main__':
