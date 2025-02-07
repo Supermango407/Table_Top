@@ -41,10 +41,12 @@ def check_events() -> None:
             open_game.check_events(event)
 
 
+# TODO: add seperate show record function
 def start_game(game:Game):
+    """starts `game`"""
     global open_game
     open_game = game()
-    seed = 9945
+    seed = 9947
 
     # ties
     # seed = 55
@@ -57,10 +59,10 @@ def start_game(game:Game):
     # seed = 164
     
     players = (
-        # Player("Player 1"),
+        Player("Player 1"),
         AI.Immanuel(seed),
         # Player("Player 2"),
-        AI.Randy(seed),
+        # AI.Randy(seed),
     )
 
     open_game.start_game(*players)

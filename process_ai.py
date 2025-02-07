@@ -1,23 +1,22 @@
 from multiprocessing import Pool
-import ai as AI
 import data
-from othello.othello import Othello, Immanuel
+import othello.othello_ais as AI
+from othello.othello import Othello
 
-
-# how many games each proccesser handels (1/4 games total)
-games_played = 100
-seed_start_index = 0
-winner_options = ['0', 'tie', '1']
 
 # Settings
+games_played = 100
+seed_start_index = 0
 processers = 4
 ais = (
-    Immanuel,
+    AI.Immanuel,
     AI.Randy,
 )
 game = Othello()
 
-def process_game(processer:int):
+
+def process_game(processer:int, save=False):
+    """processes `game` and save record to database, if `save` is True."""
     print(f"Processer {processer} started")
     
     for i in range(games_played//processers):
@@ -30,12 +29,13 @@ def process_game(processer:int):
         if seed % 25 == 0:
             print(seed)
 
-        game.start_game(*players)
+        game.start_game(*players, save_record=save)
     
     print(f"Processer {processer} finished")
 
 
 def analize_winrate(players:tuple):
+    """returns how many game players[0] wins, looses, and ties, with players[1]"""
     p1_first = data.wins_for_pvp(players[0](), players[1](), "Othello")
     p2_first = data.wins_for_pvp(players[1](), players[0](), "Othello")
     
@@ -49,9 +49,9 @@ def analize_winrate(players:tuple):
 
 
 def add_winrates(winrate_1:dict, winrate_2:dict):
-    """adds winns losses and ties for `winrate_1` and `winrate_2`."""
+    """adds wins losses and ties for `winrate_1` and `winrate_2`."""
     winrate = dict()
-    for option in winner_options:
+    for option in ['0', 'tie', '1']:
         winrate[option] = winrate_1[option]+winrate_2[option]
     
     return winrate

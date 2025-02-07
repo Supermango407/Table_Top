@@ -37,8 +37,8 @@ class Board(Sprite):
         # if `tile_border_color` is none set it to an offset of first index of `tile_colors`
         if tile_border_color == None:
             tile_color:tuple[int, int, int] = self.tile_colors[0]
-            # if `tile_color` is a darker, set `color` to a lighter hue
-            # else `color` to a darker hue
+            # if `tile_color` is a darker, set `tile_border_color` to a lighter hue
+            # else `tile_border_color` to a darker hue
             if max(tile_color) <= 127:
                 # set each of the rgb values to an average of it value and 255
                 color = [(i+255)//2 for i in tile_color]
@@ -62,7 +62,8 @@ class Board(Sprite):
 
         super().__init__()
 
-    def set_position(self):
+    def set_position(self) -> None:
+        """set global `position` based of `anchor`."""
         if GameObject.window != None:
             # set `x` base on `self.anchor` and `self.offset`
             if 'left' in self.anchor:
@@ -126,7 +127,7 @@ class Board(Sprite):
         else:
             piece.board = self
             self.pieces[tile_index] = piece
-        
+
         return True
 
     def get_piece_on(self, tile:Vector2) -> Piece:
@@ -147,8 +148,9 @@ class Board(Sprite):
         
         return position//self.tile_spacing
 
+    # TODO: make this function a generator?
     def get_all_tiles(self) -> list[Vector2]:
-        """generator that reutrns a list with all tile locations in it."""
+        """reutrns a list with all tiles in it."""
         tiles = []
         for x in range(self.tile_count[0]):
             for y in range(self.tile_count[1]):
@@ -156,16 +158,17 @@ class Board(Sprite):
         return tiles
 
     def get_global_position(self, tile:Vector2) -> Vector2:
-        """returns the global postion of `position`"""
+        """returns the global position of `tile`"""
         return self.position + Vector2(1, 1)*self.tile_size//2 + tile*self.tile_spacing
     
     def get_tile_index(self, tile:Vector2) -> int:
-        """returns what number `position` is
-        when look through the tiles left to right, then up to down"""
+        """returns what number `tile` is
+        when going through the tiles left to right, then up to down
+        like scaning, or reading."""
         return int(tile.y*self.tile_count[0] + tile.x)
 
     def get_tile_from_index(self, index:int) -> Vector2:
-        """returns the local postion of tile at `index`"""
+        """returns the tile at `index`"""
         x = index%self.tile_count[0]
         y = (index-x)//self.tile_count[0]
         return Vector2(x, y)
@@ -176,7 +179,7 @@ class Piece(Sprite):
 
     def __init__(self, tile:Vector2, board:Board, color:tuple[int, int, int], hidden=False):
         """
-        `position`: where on board piece is placed.
+        `tile`: where on board piece is placed.
         `board`: the board the Piece is placed on.
         `color`: the color of the piece.
         `hidden`: if true, sprite will not be drawn to screen.
@@ -194,3 +197,4 @@ class Piece(Sprite):
                 self.board.get_global_position(self.tile),
                 self.board.tile_size*0.4,
             )
+

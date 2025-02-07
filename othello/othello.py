@@ -15,16 +15,25 @@ from player import Player
 
 @dataclass
 class Table(Game_Table):
+    """curent set up of board
+        `turn`: whos turn it currently is.
+        `pieces`: pieces on board.
+    """
     pieces:list[Piece]
 
 
 @dataclass
 class Move(object):
+    """a piece being placed by a player.
+        `tile`: where the piece is being placed.
+        `player`: player placeing `piece`.
+    """
     tile:Vector2
     player:int
 
 
 class Othello_Piece(Piece):
+    """a piece for othello."""
 
     def __init__(self, tile:Vector2, player:int):
         self.player = player
@@ -57,14 +66,6 @@ class Othello(Game):
         self.no_valid_moves = False
         super().start_game(*players, save_record=save_record)
 
-    def update(self):
-        super().update()
-
-    def draw(self):
-        super().draw()
-        for piece in self.table.pieces:
-            piece.draw()
-
     def set_board(self) -> None:
         """sets up the board in the starting position"""
         # delete previuos game if it exsists
@@ -72,18 +73,24 @@ class Othello(Game):
             for piece in self.table.pieces:
                 piece.destroy()
             self.table.pieces = []
+            self.board.pieces = dict()
 
 
         self.place_piece(Vector2(3, 3), 0)
         self.place_piece(Vector2(3, 4), 1)
         self.place_piece(Vector2(4, 3), 1)
         self.place_piece(Vector2(4, 4), 0)
+        # print(self.table.pieces)
         
     def next_turn(self, last_turn_skipped=False):
         super().next_turn()
+
+        # no valid move for current player
         if len(self.moves) == 0:
             if last_turn_skipped:
-                # print('no valid moves')
+                # if the last player was skipped then
+                # there are no valid moves for either player
+                # and the game ends.
                 self.no_valid_moves = True
                 self.end_game(self.get_winner())
             else:
@@ -91,7 +98,7 @@ class Othello(Game):
         else:
             self.set_turn_color(self.table.turn)
             if self.players[self.table.turn].is_ai:
-                self.play_move(self.moves[self.players[self.table.turn].calculate_move(self.moves, self.table)])
+                self.ai_play_move()
 
     def set_turn_color(self, player:int) -> None:
         """sets the color of Turn Text, if it exsits, to `player`'s color."""
@@ -102,6 +109,8 @@ class Othello(Game):
         return valid_move(move, self.table)
 
     def get_winner(self):
+        # if no player has a valid move
+        # or the board is filled up
         if self.no_valid_moves or len(self.table.pieces) >= 64:
             player_pieces = [0, 0]
 
@@ -120,7 +129,6 @@ class Othello(Game):
 
     def skip_turn(self) -> None:
         """skips the turn of the current player."""
-        # print('turn skipped')
         self.next_turn(True)
 
     def check_events(self, event):
@@ -133,17 +141,17 @@ class Othello(Game):
                         self.play_move(move)
         elif event.type == pygame.KEYUP:
             if event.key == pygame.K_j:
-                # self.set_board()
-                self.start_game()
+                self.set_board()
+                # self.start_game()
 
     def set_moves(self):
         self.moves = []
         tiles = self.board.get_all_tiles()
 
-        # delete the moves that arent valid
+        # add the moves that are valid
         for tile in tiles:
             move = Move(tile, self.table.turn)
-            # if a peice is already there its not valid.
+
             if self.valid_move(move):
                 self.moves.append(move)
 
@@ -151,23 +159,27 @@ class Othello(Game):
         self.place_piece(move.tile, move.player)
         super().play_move(move)
 
+    def ai_play_move(self):
+        """called when its on ais turn,"""
+        self.play_move(self.moves[self.players[self.table.turn].calculate_move(self.moves, self.table)])
+
     def record_move(self, move:Move):
         self.history += Othello.colors[self.table.turn]
         self.history += str(self.board.get_tile_index(move.tile))
 
     def place_piece(self, tile:Vector2, player:int) -> None:
-        """places a peice on the board"""
+        """places a peice on the board, and flips pieces."""
         piece = Othello_Piece(tile, player)
         self.board.place_piece(tile, piece)
         self.table.pieces.append(piece)
-        
         for piece in get_flip_pieces(Move(tile, player), self.table):
             piece.flip()
 
     def split_record(self, record:str) -> list[str]:
-        """splits the records into move list"""
+        """returns split record into move list."""
         moves = []
         move_string = ''
+        
         for char in record:
             # if showing player string
             # then add the last move string to moves if exist
@@ -179,6 +191,7 @@ class Othello(Game):
                 move_string = char
             else:
                 move_string += char
+        
         moves.append(move_string)
         
         return moves
@@ -191,6 +204,7 @@ class Othello(Game):
         for move_string in moves:
             self.play_move_string(move_string)
 
+        # set `no_valid_moves` to True to make sure the game ends
         self.no_valid_moves = True
         self.set_winner_text(self.get_winner())
 
@@ -208,6 +222,7 @@ class Othello(Game):
             self.set_turn_color(self.table.turn)
             self.play_move_string(move)
         
+        # set `no_valid_moves` to True to make sure the game ends
         self.no_valid_moves = True
         self.set_winner_text(self.get_winner())
 
@@ -226,19 +241,9 @@ class Othello(Game):
             elif type(winner) == str:
                 self.turn_text.set_color(game_settings.tie_color)
 
-    def end_game(self, winner):
-        self.set_winner_text(winner)
-        super().end_game(winner)
-
-    def debug_print_table(self):
-        """prints the table to the console."""
-        print('-'*80)
-        for piece in self.table.pieces:
-            print('\t', piece.position)
-        print('-'*80)
-
 
 def valid_move(move:Move, table:Table) -> bool:
+    """whether making `move` on `table` is a valid move."""
     # isn't valid if a piece is already there
     if get_piece_at(move.tile, table) != None:
         # print('Piece There')
@@ -252,9 +257,10 @@ def valid_move(move:Move, table:Table) -> bool:
     return True
 
 
-def get_piece_at(position:Vector2, table:Table) -> Piece:
+def get_piece_at(tile:Vector2, table:Table) -> Piece:
+    """returns piece on table, at `tile`, if it exsists."""
     for piece in table.pieces:
-        if piece.tile == position:
+        if piece.tile == tile:
             return piece
         
     return None
@@ -263,6 +269,7 @@ def get_piece_at(position:Vector2, table:Table) -> Piece:
 def get_flip_pieces(move:Move, table:Table) -> list[Piece]:
         """reutrns a list of pieces that will flip if a peice is placed at `position`"""
         pieces = [] # the reutrn value
+        
         # `direction_offets`: the amount you add for each direcion
         # that needs to be checked.
         direction_offets = [
@@ -307,16 +314,4 @@ def get_flip_pieces(move:Move, table:Table) -> list[Piece]:
                     pieces_along_direction.append(piece_at_point_checking)
         
         return pieces
-
-
-# print(valid_move(
-#     Move(Vector2(2, 4), 0),
-#     [
-#         Move(Vector2(3, 3), 0),
-#         Move(Vector2(3, 4), 1),
-#         Move(Vector2(4, 3), 1),
-#         Move(Vector2(4, 4), 0),
-#     ]
-# ))
-# print()
 

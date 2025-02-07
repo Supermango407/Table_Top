@@ -34,8 +34,9 @@ class Game(Sprite):
         self.players = []
         self.save_record = False
 
-        self.table:Game_Table = Game_Table(turn=-1)
         # the current set up of the game
+        self.table:Game_Table = Game_Table(turn=-1)
+        # record of game played
         self.history = ""
 
         # `turn_text`: text of the player whose turn it is
@@ -47,11 +48,13 @@ class Game(Sprite):
                 color=(255, 255, 255)
             )
         
+        # if in middle of game or not
         self.game_running = False
         
         super().__init__()
 
     def start_game(self, *players:tuple[Player], save_record=False):
+        """starts new game."""
         self.game_running = True
         self.players = players
         self.table.turn = -1
@@ -72,7 +75,7 @@ class Game(Sprite):
         self.set_moves()
         self.set_turn_text(self.table.turn)
         
-    def play_move(self, move=None):
+    def play_move(self, move=None) -> None:
         """plays `move` by player whos turn it is.
         then checks to see if the game ended
         if not, goes to the next player's turn."""
@@ -103,7 +106,7 @@ class Game(Sprite):
         if GameObject.window != None:
             self.turn_text.set_text(self.players[player].name)
 
-    def valid_move(self) -> bool:
+    def valid_move(self, move=None) -> bool:
         """returns true if the move is a valid move, else returns false"""
         return True
 
