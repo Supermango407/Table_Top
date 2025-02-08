@@ -4,6 +4,8 @@ import time
 import os
 import settings
 from game import Game
+# from othello.othello import Othello
+# import othello.othello_ais as AI
 from checkers.checkers import Checkers
 import checkers.checkers_ais as AI
 from window import GameObject, Sprite
@@ -37,8 +39,11 @@ def check_events() -> None:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
-        elif open_game != None:
-            open_game.check_events(event)
+        elif event.type == pygame.MOUSEMOTION:
+            GameObject.mouse_pos = pygame.mouse.get_pos()
+
+        for gameobject in GameObject.event_handlers:
+            gameobject.check_event(event)
 
 
 # TODO: add seperate show record function
@@ -103,3 +108,6 @@ if __name__ == '__main__':
 
     pygame.quit()
 
+
+# TODO:
+# set pygame.mouse.get_pos() to self.mouse_pos

@@ -60,7 +60,7 @@ class Board(Sprite):
         self.tile_spacing = self.tile_size+self.tile_border_width
         """the spaceing between adjecent tiles"""
 
-        super().__init__()
+        super().__init__(self.position)
 
     def set_position(self) -> None:
         """set global `position` based of `anchor`."""
@@ -131,7 +131,7 @@ class Board(Sprite):
         if piece == None:
             self.pieces[tile_index] = Piece(tile, self, piece_color)
         else:
-            piece.board = self
+            piece.place_on_board(self)
             self.pieces[tile_index] = piece
 
         return True
@@ -183,7 +183,7 @@ class Board(Sprite):
 class Piece(Sprite):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, board:Board, color:tuple[int, int, int], outline_color=None, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color=None, hidden=False):
         """
         `tile`: where on board piece is placed.
         `board`: the board the Piece is placed on.
@@ -193,10 +193,17 @@ class Piece(Sprite):
         `hidden`: if true, sprite will not be drawn to screen.
         """
         self.tile = tile
-        self.board = board
         self.color = color
         self.outline_color = outline_color
-        super().__init__(hidden)
+        self.board = None
+        self.raduis = 0
+        super().__init__(None, hidden)
+
+    def place_on_board(self, board:Board):
+        """places `self` on `board`"""
+        self.board = board
+        self.raduis = self.board.tile_size*0.4
+        self.set_position(board.get_global_position(self.tile))
 
     def draw(self):
         if self.board != None:
@@ -207,7 +214,8 @@ class Piece(Sprite):
                     GameObject.window,
                     self.outline_color,
                     position,
-                    self.board.tile_size*0.45,
+                    self.raduis,
+                    1,
                 )
 
             # draw piece
@@ -215,6 +223,6 @@ class Piece(Sprite):
                 GameObject.window,
                 self.color,
                 position,
-                self.board.tile_size*0.4,
+                self.raduis,
             )
 

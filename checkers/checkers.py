@@ -11,15 +11,33 @@ import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
 from board import Board, Piece
+from collider import CircleCollider
 
 
 class CheckersPiece(Piece):
     """a piece for `Checkers` game."""
 
     def __init__(self, player:int, tile):
+        super().__init__(tile, checkers_settings.piece_colors[player])
         self.player = player
-        super().__init__(tile, None, checkers_settings.piece_colors[player])
+        self.collider = CircleCollider(self, 0, onclick=self.click_test, show=True)
 
+    def place_on_board(self, board):
+        super().place_on_board(board)
+        self.collider.radius = self.raduis
+
+    def set_position(self, position):
+        super().set_position(position)
+        self.collider.position = position
+
+    def destroy(self):
+        self.collider.destroy()
+        return super().destroy()
+
+    def click_test(self):
+        print(self)
+        self.destroy()
+    
     # TODO
     def king(self):
         """changes piece to a king."""
@@ -38,6 +56,7 @@ class Checkers(Game):
     
     def start_game(self, *players, save_record=False):
         self.set_board()
+        # CircleCollider(Vector2(100, 100), 50, onclick=self.click_test, show=True)
         return super().start_game(*players, save_record=save_record)
 
     def set_board(self):
@@ -75,3 +94,5 @@ class Checkers(Game):
         piece = CheckersPiece(player, tile)
         self.board.place_piece(tile, piece)
 
+    def click_test(self):
+        print(self)

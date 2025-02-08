@@ -1,6 +1,7 @@
 from __future__ import annotations
 import pygame
 from pygame import Vector2
+# from collider import Collider
 
 
 class GameObject(object):
@@ -8,32 +9,56 @@ class GameObject(object):
     childeren:list[GameObject] = []
     window:pygame.Surface = None
     font:pygame.font.Font = None
+    mouse_pos = Vector2(0, 0)
 
-    def __init__(self):
+    # list of GameObjects that look for events.
+    event_handlers:list[GameObject] = []
+
+    def __init__(self, check_events:bool=False):
+        """
+        `check_events`: if True will check events eg:
+            key_presses, mouse clicks ect.
+        """
+
+        if check_events:
+            GameObject.event_handlers.append(self)
         GameObject.childeren.append(self)
 
     def update(self) -> None:
         """called once per frame"""
         pass
 
+    def check_event(self, event):
+        """called on event if `self` is an event_handler."""
+        pass
+
     def destroy(self) -> None:
-         """Deletes `self` and removes it from GameOjbect's children."""
-         if self in GameObject.childeren:
+        """Deletes `self` and removes it from GameOjbect's children."""
+        if self in GameObject.childeren:
             GameObject.childeren.remove(self)
-         del(self)
+        
+        if self in GameObject.event_handlers:
+            GameObject.event_handlers.remove(self)
+        
+        del(self)
 
 
 class Sprite(GameObject):
     """GameOjbects that are drawn to the screen"""
     childeren:list[Sprite] = []
 
-    def __init__(self, hidden=False):
+    def __init__(self, position:Vector2, hidden=False, check_events:bool=False):
         """
         `hidden`: if True it will not draw the object
+        `check_events`: if True will check events eg:
+            key_presses, mouse clicks ect.
+        `collider`: a object that can detect mouse events.
         """
         self.hidden = hidden
+        self.position = position
         Sprite.childeren.append(self)
-        super().__init__()
+
+        super().__init__(check_events=check_events)
     
     def update(self):
         super().update()
@@ -43,6 +68,10 @@ class Sprite(GameObject):
     def draw(self) -> None:
         pass
 
+    def set_position(self, position:Vector2) -> None:
+        """sets the position of `self`"""
+        self.position = position
+        
     def destroy(self):
          if self in Sprite.childeren:
             Sprite.childeren.remove(self)

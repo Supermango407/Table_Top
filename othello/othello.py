@@ -37,7 +37,7 @@ class OthelloPiece(Piece):
 
     def __init__(self, tile:Vector2, player:int):
         self.player = player
-        super().__init__(tile, None, othello_settings.piece_colors[player], False)
+        super().__init__(tile, None, othello_settings.piece_colors[player])
 
     # TODO: Add flip animation
     def flip(self):
@@ -131,7 +131,7 @@ class Othello(Game):
         """skips the turn of the current player."""
         self.next_turn(True)
 
-    def check_events(self, event):
+    def check_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and not self.players[self.table.turn].is_ai:
                 tile_pos = self.board.get_tile_at(pygame.mouse.get_pos())

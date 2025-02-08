@@ -52,7 +52,7 @@ class Game(Sprite):
         # if in middle of game or not
         self.game_running = False
         
-        super().__init__()
+        super().__init__(Vector2(0, 0), check_events=True)
 
     def start_game(self, *players:tuple[Player], save_record=False):
         """starts new game."""
