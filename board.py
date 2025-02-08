@@ -83,6 +83,12 @@ class Board(Sprite):
             
             self.position = Vector2(x, y)
 
+    def clear_board(self):
+        """deletes all pieces on the board."""
+        for piece in self.pieces:
+            self.pieces[piece].destroy()
+        self.pieces = dict()
+
     def draw(self) -> None:
         # TODO fix misaligned border
         """the size of the tiles including the boarder"""
@@ -177,24 +183,38 @@ class Board(Sprite):
 class Piece(Sprite):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, board:Board, color:tuple[int, int, int], hidden=False):
+    def __init__(self, tile:Vector2, board:Board, color:tuple[int, int, int], outline_color=None, hidden=False):
         """
         `tile`: where on board piece is placed.
         `board`: the board the Piece is placed on.
         `color`: the color of the piece.
+        `outline_color`: the color of the piece's outline.
+            if left None there wont be an outline.
         `hidden`: if true, sprite will not be drawn to screen.
         """
         self.tile = tile
         self.board = board
         self.color = color
+        self.outline_color = outline_color
         super().__init__(hidden)
 
     def draw(self):
         if self.board != None:
+            position = self.board.get_global_position(self.tile)
+            # draw outline if it exsitst
+            if self.outline_color != None:
+                pygame.draw.circle(
+                    GameObject.window,
+                    self.outline_color,
+                    position,
+                    self.board.tile_size*0.45,
+                )
+
+            # draw piece
             pygame.draw.circle(
                 GameObject.window,
                 self.color,
-                self.board.get_global_position(self.tile),
+                position,
                 self.board.tile_size*0.4,
             )
 

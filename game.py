@@ -24,6 +24,7 @@ class GameVars(object):
 class Game_Table(object):
     """class with basic Game vars"""
     turn:int
+    # TODO: add timer
 
 
 class Game(Sprite):

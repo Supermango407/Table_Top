@@ -4,11 +4,11 @@ import time
 import os
 import settings
 from game import Game
-from othello.othello import Othello
+from checkers.checkers import Checkers
+import checkers.checkers_ais as AI
 from window import GameObject, Sprite
 from board import Board
 from player import Player
-import othello.othello_ais as AI
 
 
 def start() -> None:
@@ -16,7 +16,7 @@ def start() -> None:
     GameObject.window = window
     GameObject.font = pygame.font.SysFont('Consolas', settings.font_size)
     
-    start_game(Othello)
+    start_game(Checkers)
 
 
 def update() -> None:
@@ -60,8 +60,8 @@ def start_game(game:Game):
     
     players = (
         Player("Player 1"),
-        AI.Immanuel(seed),
-        # Player("Player 2"),
+        # AI.Immanuel(seed),
+        Player("Player 2"),
         # AI.Randy(seed),
     )
 

@@ -5,12 +5,12 @@ from pygame import Vector2
 from dataclasses import dataclass
 import sys
 sys.path.append('../table_top')
-import othello.game_settings as game_settings
-from game import Game, Game_Table, GameVars
-import ai as AI
-from board import Board, Piece
+import othello.othello_settings as othello_settings
 from window import GameObject, Sprite
+import ai as AI
 from player import Player
+from game import Game, Game_Table, GameVars
+from board import Board, Piece
 
 
 @dataclass
@@ -32,18 +32,18 @@ class Move(object):
     player:int
 
 
-class Othello_Piece(Piece):
+class OthelloPiece(Piece):
     """a piece for othello."""
 
     def __init__(self, tile:Vector2, player:int):
         self.player = player
-        super().__init__(tile, None, game_settings.piece_colors[player], False)
+        super().__init__(tile, None, othello_settings.piece_colors[player], False)
 
     # TODO: Add flip animation
     def flip(self):
         """flips the piece and gives it to the other player."""
         self.player = 1 if self.player == 0 else 0
-        self.color = game_settings.piece_colors[self.player]
+        self.color = othello_settings.piece_colors[self.player]
 
 
 class Othello(Game):
@@ -53,10 +53,10 @@ class Othello(Game):
     def __init__(self):
         super().__init__()
         self.board = Board(
-            tile_size=game_settings.board['tile_size'],
-            tile_border_width=game_settings.board['border_width'],
-            tile_colors=game_settings.board['baground_color'],
-            tile_border_color=game_settings.board['border_color']
+            tile_size=othello_settings.board['tile_size'],
+            tile_border_width=othello_settings.board['border_width'],
+            tile_colors=othello_settings.board['baground_color'],
+            tile_border_color=othello_settings.board['border_color']
         )
 
         self.table = Table(-1, [])
@@ -103,7 +103,7 @@ class Othello(Game):
     def set_turn_color(self, player:int) -> None:
         """sets the color of Turn Text, if it exsits, to `player`'s color."""
         if GameObject.window != None:
-            self.turn_text.set_color(game_settings.piece_colors[player])
+            self.turn_text.set_color(othello_settings.piece_colors[player])
 
     def valid_move(self, move:Move):
         return valid_move(move, self.table)
@@ -169,7 +169,7 @@ class Othello(Game):
 
     def place_piece(self, tile:Vector2, player:int) -> None:
         """places a peice on the board, and flips pieces."""
-        piece = Othello_Piece(tile, player)
+        piece = OthelloPiece(tile, player)
         self.board.place_piece(tile, piece)
         self.table.pieces.append(piece)
         for piece in get_flip_pieces(Move(tile, player), self.table):
@@ -237,9 +237,9 @@ class Othello(Game):
         super().set_winner_text(winner)
         if GameObject.window != None:
             if type(winner) == int:
-                self.turn_text.set_color(game_settings.piece_colors[winner])
+                self.turn_text.set_color(othello_settings.piece_colors[winner])
             elif type(winner) == str:
-                self.turn_text.set_color(game_settings.tie_color)
+                self.turn_text.set_color(othello_settings.tie_color)
 
 
 def valid_move(move:Move, table:Table) -> bool:
@@ -293,7 +293,7 @@ def get_flip_pieces(move:Move, table:Table) -> list[Piece]:
             # does range 1-7 cause thats the most the pieces
             # that can be fliped in a specific direction
             for i in range(1, 8):
-                piece_at_point_checking:Othello_Piece = get_piece_at(move.tile + offset*i, table)
+                piece_at_point_checking:OthelloPiece = get_piece_at(move.tile + offset*i, table)
                 
                 # if no peice is at the `piece_at_point_checking`
                 # then break out of nested loop 
