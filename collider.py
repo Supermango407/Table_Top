@@ -6,6 +6,25 @@ from pygame import Vector2
 from window import GameObject, Sprite
 
 
+class ClickableSprite(Sprite):
+    
+    def __init__(self, position, collider_type:type[Collider], onclick:Callable=None, show_collider:bool=False, hidden=False, check_events=False):
+        """
+        `position`: the position of sprite.
+        `collider_type`: the type of collider of the sprite.
+        """
+        super().__init__(position=position, hidden=hidden, check_events=check_events)
+        self.collider = collider_type(position=self, onclick=onclick, show=show_collider)
+    
+    def set_position(self, position):
+        super().set_position(position)
+        self.collider.position = position
+
+    def destroy(self):
+        self.collider.destroy()
+        return super().destroy()
+
+
 class Collider(GameObject):
 
     def __init__(self, position:Union[Vector2, Sprite]=None, onclick:Callable=None, show:bool=False):
@@ -25,8 +44,12 @@ class Collider(GameObject):
     def get_pos_and_sprite(self, value:Union[Vector2, Sprite]):
         """if value is a sprite, returns a tuple with `position` of sprites and sprite.
         otherwise returns value and None"""
-        if value in Sprite.childeren:
-            return (value.position, value)
+        if isinstance(value, Sprite):
+            try:
+                return (value.position, value)
+            except AttributeError:
+                print(value, "doesn't have position")
+                return(Vector2(0, 0), value)
         else:
             return (value, None)
 
@@ -53,7 +76,7 @@ class Collider(GameObject):
 
 class CircleCollider(Collider):
 
-    def __init__(self, position, radius:float, onclick:Callable=None, show=False):
+    def __init__(self, position, onclick:Callable=None, radius:float=0, show=False):
         self.radius = radius
         super().__init__(position, onclick=onclick, show=show)
 
@@ -69,3 +92,4 @@ class CircleCollider(Collider):
     def collides_at(self, position):
         if self.position != None:
             return self.position.distance_to(position) <= self.radius
+

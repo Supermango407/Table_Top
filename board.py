@@ -2,7 +2,9 @@ from __future__ import annotations
 import pygame
 from pygame import Vector2
 from typing import Union
+from collections.abc import Callable
 from window import GameObject, Sprite
+from collider import ClickableSprite
 
 
 class Board(Sprite):
@@ -180,14 +182,14 @@ class Board(Sprite):
         return Vector2(x, y)
 
 
-class Piece(Sprite):
+class Piece(ClickableSprite):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color=None, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider_type=None, onlick:Callable=None, outline_color=None, hidden=False):
         """
         `tile`: where on board piece is placed.
-        `board`: the board the Piece is placed on.
         `color`: the color of the piece.
+        `collider_type`: the type of the collider of the piece.
         `outline_color`: the color of the piece's outline.
             if left None there wont be an outline.
         `hidden`: if true, sprite will not be drawn to screen.
@@ -197,7 +199,7 @@ class Piece(Sprite):
         self.outline_color = outline_color
         self.board = None
         self.raduis = 0
-        super().__init__(None, hidden)
+        super().__init__(position=Vector2(0, 0), collider_type=collider_type, onclick=onlick, show_collider=True, hidden=hidden)
 
     def place_on_board(self, board:Board):
         """places `self` on `board`"""

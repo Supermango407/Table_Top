@@ -18,21 +18,26 @@ class CheckersPiece(Piece):
     """a piece for `Checkers` game."""
 
     def __init__(self, player:int, tile):
-        super().__init__(tile, checkers_settings.piece_colors[player])
+        
+        super().__init__(
+            tile=tile,
+            color=checkers_settings.piece_colors[player],
+            collider_type=CircleCollider,
+            onlick=self.click_test
+        )
         self.player = player
-        self.collider = CircleCollider(self, 0, onclick=self.click_test, show=True)
 
     def place_on_board(self, board):
         super().place_on_board(board)
         self.collider.radius = self.raduis
 
-    def set_position(self, position):
-        super().set_position(position)
-        self.collider.position = position
+    # def set_position(self, position):
+    #     super().set_position(position)
+    #     self.collider.position = position
 
-    def destroy(self):
-        self.collider.destroy()
-        return super().destroy()
+    # def destroy(self):
+    #     self.collider.destroy()
+    #     return super().destroy()
 
     def click_test(self):
         print(self)
@@ -96,3 +101,4 @@ class Checkers(Game):
 
     def click_test(self):
         print(self)
+
