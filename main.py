@@ -29,6 +29,10 @@ def update() -> None:
     for gameobject in GameObject.childeren:
         gameobject.update()
 
+    for sprite in Sprite.childeren:
+        if not sprite.hidden:
+            sprite.draw()
+
     pygame.display.update()
 
 

@@ -4,7 +4,7 @@ from pygame import Vector2
 from typing import Union
 from collections.abc import Callable
 from window import GameObject, Sprite
-from collider import ClickableSprite
+from collider import DraggableSprite
 
 
 class Board(Sprite):
@@ -182,16 +182,18 @@ class Board(Sprite):
         return Vector2(x, y)
 
 
-class Piece(ClickableSprite):
+class Piece(DraggableSprite):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider_type=None, onlick:Callable=None, outline_color=None, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider_type=None, draggable=False, outline_color=None, show_collider=False, hidden=False):
         """
         `tile`: where on board piece is placed.
         `color`: the color of the piece.
         `collider_type`: the type of the collider of the piece.
+        `draggable`: if true sprite can be dragged across the screen.
         `outline_color`: the color of the piece's outline.
             if left None there wont be an outline.
+        `show_collider`: whether it should show the collider or not.
         `hidden`: if true, sprite will not be drawn to screen.
         """
         self.tile = tile
@@ -199,7 +201,11 @@ class Piece(ClickableSprite):
         self.outline_color = outline_color
         self.board = None
         self.raduis = 0
-        super().__init__(position=Vector2(0, 0), collider_type=collider_type, onclick=onlick, show_collider=True, hidden=hidden)
+        super().__init__(position=Vector2(0, 0), collider_type=collider_type, locked=not draggable, show_collider=show_collider, hidden=hidden)
+
+    def onlifted(self, started, ended):
+        self.set_position(started)
+        super().onlifted(started, ended)
 
     def place_on_board(self, board:Board):
         """places `self` on `board`"""
@@ -209,13 +215,12 @@ class Piece(ClickableSprite):
 
     def draw(self):
         if self.board != None:
-            position = self.board.get_global_position(self.tile)
             # draw outline if it exsitst
             if self.outline_color != None:
                 pygame.draw.circle(
                     GameObject.window,
                     self.outline_color,
-                    position,
+                    self.position,
                     self.raduis,
                     1,
                 )
@@ -224,7 +229,7 @@ class Piece(ClickableSprite):
             pygame.draw.circle(
                 GameObject.window,
                 self.color,
-                position,
+                self.position,
                 self.raduis,
             )
 

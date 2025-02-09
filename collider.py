@@ -6,25 +6,6 @@ from pygame import Vector2
 from window import GameObject, Sprite
 
 
-class ClickableSprite(Sprite):
-    
-    def __init__(self, position, collider_type:type[Collider], onclick:Callable=None, show_collider:bool=False, hidden=False, check_events=False):
-        """
-        `position`: the position of sprite.
-        `collider_type`: the type of collider of the sprite.
-        """
-        super().__init__(position=position, hidden=hidden, check_events=check_events)
-        self.collider = collider_type(position=self, onclick=onclick, show=show_collider)
-    
-    def set_position(self, position):
-        super().set_position(position)
-        self.collider.position = position
-
-    def destroy(self):
-        self.collider.destroy()
-        return super().destroy()
-
-
 class Collider(GameObject):
 
     def __init__(self, position:Union[Vector2, Sprite]=None, onclick:Callable=None, show:bool=False):
@@ -92,4 +73,68 @@ class CircleCollider(Collider):
     def collides_at(self, position):
         if self.position != None:
             return self.position.distance_to(position) <= self.radius
+
+
+class ClickableSprite(Sprite):
+    
+    def __init__(self, position, collider_type:type[Collider], show_collider:bool=False, hidden=False, check_events=False):
+        """
+        `position`: the position of sprite.
+        `collider_type`: the type of collider of the sprite.
+        """
+        super().__init__(position=position, hidden=hidden, check_events=check_events)
+        self.collider = collider_type(position=self, onclick=self.onclick, show=show_collider)
+    
+    def onclick(self):
+        """called when sprite is clicked"""
+        pass
+
+    def set_position(self, position):
+        super().set_position(position)
+        self.collider.position = position
+
+    def destroy(self):
+        self.collider.destroy()
+        return super().destroy()
+
+
+class DraggableSprite(ClickableSprite):
+    sprite_dragging = None
+    click_position:Vector2 = Vector2(0, 0)
+    click_offset:Vector2 = Vector2(0, 0)
+
+    def __init__(self, position, collider_type, locked=False, show_collider=False, hidden=False):
+        """
+        `locked`: if true, piece isn't draggable.
+        """
+        super().__init__(position=position, collider_type=collider_type, show_collider=show_collider, hidden=hidden, check_events=True)
+        self.locked = locked
+
+    def update(self):
+        super().update()
+        if DraggableSprite.sprite_dragging == self:
+            self.set_position(self.mouse_pos+DraggableSprite.click_offset)
+
+    def onclick(self):
+        """called when clicked"""
+        super().onclick()
+        if not self.locked:
+            self.move_to_top()
+            DraggableSprite.click_position = self.mouse_pos
+            DraggableSprite.click_offset = self.position - self.mouse_pos
+            DraggableSprite.sprite_dragging = self
+
+    def onlifted(self, started, ended):
+        """called when sprite is lifted.
+            `started` where sprite started dragging
+            `ended`: where the sprite ended up.
+        """
+        self.click_position = Vector2(0, 0)
+        self.click_offset = Vector2(0, 0)
+        DraggableSprite.sprite_dragging = None
+
+    def check_event(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            if DraggableSprite.sprite_dragging == self:
+                self.onlifted(DraggableSprite.click_offset+DraggableSprite.click_position, self.position)
 

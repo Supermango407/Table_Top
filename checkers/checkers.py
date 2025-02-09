@@ -23,21 +23,13 @@ class CheckersPiece(Piece):
             tile=tile,
             color=checkers_settings.piece_colors[player],
             collider_type=CircleCollider,
-            onlick=self.click_test
+            draggable=True
         )
         self.player = player
 
     def place_on_board(self, board):
         super().place_on_board(board)
         self.collider.radius = self.raduis
-
-    # def set_position(self, position):
-    #     super().set_position(position)
-    #     self.collider.position = position
-
-    # def destroy(self):
-    #     self.collider.destroy()
-    #     return super().destroy()
 
     def click_test(self):
         print(self)

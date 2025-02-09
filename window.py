@@ -59,14 +59,15 @@ class Sprite(GameObject):
         Sprite.childeren.append(self)
 
         super().__init__(check_events=check_events)
-    
-    def update(self):
-        super().update()
-        if GameObject.window != None and not self.hidden:
-            self.draw()
 
     def draw(self) -> None:
+        """draws sprite on `window`."""
         pass
+
+    def move_to_top(self):
+        """moves the above other sprites, so it gets drawn ontop."""
+        Sprite.childeren.remove(self)
+        Sprite.childeren.append(self)
 
     def set_position(self, position:Vector2) -> None:
         """sets the position of `self`"""
