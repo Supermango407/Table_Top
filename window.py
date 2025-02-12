@@ -16,8 +16,8 @@ class GameObject(object):
 
     def __init__(self, check_events:bool=False):
         """
-        `check_events`: if True will check events eg:
-            key_presses, mouse clicks ect.
+        `check_events`: if True will check events,
+            eg: key_presses, mouse clicks ect.
         """
 
         if check_events:
@@ -49,10 +49,10 @@ class Sprite(GameObject):
 
     def __init__(self, position:Vector2, hidden=False, check_events:bool=False):
         """
-        `hidden`: if True it will not draw the object
-        `check_events`: if True will check events eg:
-            key_presses, mouse clicks ect.
-        `collider`: a object that can detect mouse events.
+        `position`: the location of the sprite onscreen.
+        `hidden`: if true, sprite will not be drawn to screen.
+        `check_events`: if True will check events,
+            eg: key_presses, mouse clicks ect.
         """
         self.hidden = hidden
         self.position = position

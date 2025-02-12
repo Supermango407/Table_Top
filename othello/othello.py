@@ -37,7 +37,7 @@ class OthelloPiece(Piece):
 
     def __init__(self, tile:Vector2, player:int):
         self.player = player
-        super().__init__(tile, None, othello_settings.piece_colors[player])
+        super().__init__(tile=tile, color=othello_settings.piece_colors[player])
 
     # TODO: Add flip animation
     def flip(self):

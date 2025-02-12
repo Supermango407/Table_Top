@@ -52,6 +52,10 @@ class Board(Sprite):
             self.tile_border_color = tile_border_color
 
         self.pieces:dict[Piece] = dict()
+        # piece selected keeps track of last piece click
+        # for games like chess and checkers.
+        # it normaly shows the valid moves for said piece.
+        self.piece_selected:Piece = None
 
         # set the board width and height
         self.board_width = self.tile_count[0]*self.tile_size + self.tile_border_width*(self.tile_count[0]-1)
@@ -182,33 +186,33 @@ class Board(Sprite):
         return Vector2(x, y)
 
 
-class Piece(DraggableSprite):
+class Piece(Sprite):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider_type=None, draggable=False, outline_color=None, show_collider=False, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, hidden=False):
         """
         `tile`: where on board piece is placed.
         `color`: the color of the piece.
-        `collider_type`: the type of the collider of the piece.
-        `draggable`: if true sprite can be dragged across the screen.
         `outline_color`: the color of the piece's outline.
             if left None there wont be an outline.
-        `show_collider`: whether it should show the collider or not.
         `hidden`: if true, sprite will not be drawn to screen.
+        `check_events`: if True will check events,
+            eg: key_presses, mouse clicks ect.
         """
         self.tile = tile
         self.color = color
         self.outline_color = outline_color
         self.board = None
-        self.raduis = 0
-        super().__init__(position=Vector2(0, 0), collider_type=collider_type, locked=not draggable, show_collider=show_collider, hidden=hidden)
+
+        # position will be set when the piece is placed.
+        super().__init__(position=Vector2(0, 0), hidden=hidden)
 
     def onlifted(self, started, ended):
         self.set_position(started)
         super().onlifted(started, ended)
 
     def place_on_board(self, board:Board):
-        """places `self` on `board`"""
+        """called when this piece is placed on a board."""
         self.board = board
         self.raduis = self.board.tile_size*0.4
         self.set_position(board.get_global_position(self.tile))
@@ -232,4 +236,22 @@ class Piece(DraggableSprite):
                 self.position,
                 self.raduis,
             )
+
+
+class ActivePiece(Piece, DraggableSprite):
+    """a Piece that has moves, and can usally be dragged around."""
+
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, locked=False, hidden=False):
+        """
+        `tile`: where on board piece is placed.
+        `color`: the color of the piece.
+        `outline_color`: the color of the piece's outline.
+            if left None there wont be an outline.
+        `hidden`: if true, sprite will not be drawn to screen.
+        `check_events`: if True will check events,
+            eg: key_presses, mouse clicks ect.
+        """
+        # position will be set when piece is placed but it needs a place holder.
+        DraggableSprite.__init__(self, position=Vector2(0, 0), locked=locked)
+        Piece.__init__(self, tile=tile, color=color, outline_color=outline_color, hidden=hidden)
 

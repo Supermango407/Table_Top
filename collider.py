@@ -6,48 +6,25 @@ from pygame import Vector2
 from window import GameObject, Sprite
 
 
-class Collider(GameObject):
+class Collider(Sprite):
+    """a sprite than can see if mouse is over it and detected other collisions."""
 
-    def __init__(self, position:Union[Vector2, Sprite]=None, onclick:Callable=None, show:bool=False):
+    def __init__(self, position:Vector2, onclick:Callable=None, hidden:bool=True):
         """
-        `position`: the position of the collider.
-            if adding it to Sprite use sprite
-            if global collider use Vector2
+        `position`: the location of the sprite onscreen.
         `onclick`: funtion to be called when clicked.
-        `show`: if True it will show outline of `self` on screen.
+        `hidden`: if true, sprite will not be drawn to screen.
         """
-        super().__init__(check_events=True)
+        super().__init__(position=position, hidden=hidden, check_events=True)
         self.onclick = onclick
-        self.position, self.sprite = self.get_pos_and_sprite(position)
-        self.mouse_over = self.collides_at(self.mouse_pos)
-        self.show = show
-    
-    def get_pos_and_sprite(self, value:Union[Vector2, Sprite]):
-        """if value is a sprite, returns a tuple with `position` of sprites and sprite.
-        otherwise returns value and None"""
-        if isinstance(value, Sprite):
-            try:
-                return (value.position, value)
-            except AttributeError:
-                print(value, "doesn't have position")
-                return(Vector2(0, 0), value)
-        else:
-            return (value, None)
+        self.is_mouse_over = self.collides_at(self.mouse_pos)
 
-    def update(self):
-        super().update()
-        if self.show and self.position != None:
-            self.draw()
-    
-    def draw(self) -> None:
-        """draws outline of `self` to screen."""
-        pass
 
     def check_event(self, event):
         if event.type == pygame.MOUSEMOTION:
-            self.mouse_over = self.collides_at(self.mouse_pos)
+            self.is_mouse_over = self.collides_at(self.mouse_pos)
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if self.onclick != None and self.mouse_over:
+            if self.onclick != None and self.is_mouse_over:
                 self.onclick()
 
     def collides_at(self, position:Vector2) -> bool:
@@ -56,13 +33,20 @@ class Collider(GameObject):
 
 
 class CircleCollider(Collider):
-
-    def __init__(self, position, onclick:Callable=None, radius:float=0, show=False):
+    """i circular collider."""
+    
+    def __init__(self, position:Union[Vector2, Sprite], radius:float, onclick:Callable=None, hidden:bool=True):
+        """
+        `position`: the location of the sprite onscreen.
+        `radius`: the radius of circle collider.
+        `onclick`: funtion to be called when clicked.
+        `hidden`: if true, sprite will not be drawn to screen.
+        """
         self.radius = radius
-        super().__init__(position, onclick=onclick, show=show)
+        super().__init__(position=position, onclick=onclick, hidden=hidden)
 
     def draw(self):
-        color = (255, 0, 0) if self.mouse_over else (0, 255, 0)
+        color = (255, 0, 0) if self.is_mouse_over else (0, 255, 0)
         # draw circle
         pygame.draw.circle(self.window, color, self.position, self.radius, 1)
         # draw vertical line
@@ -70,28 +54,60 @@ class CircleCollider(Collider):
         # draw horizantal line
         pygame.draw.line(self.window, color, self.position+Vector2(self.radius, 0), self.position+Vector2(-self.radius, 0))
 
-    def collides_at(self, position):
+    def collides_at(self, position:Vector2):
         if self.position != None:
             return self.position.distance_to(position) <= self.radius
 
 
 class ClickableSprite(Sprite):
     
-    def __init__(self, position, collider_type:type[Collider], show_collider:bool=False, hidden=False, check_events=False):
+    def __init__(self, position, collider:Collider, show_collider:bool=False, hidden=False, check_events=False):
         """
-        `position`: the position of sprite.
-        `collider_type`: the type of collider of the sprite.
+        `position`: the location of the sprite onscreen.
+        `collider`: the collider of the sprite.
+            the coliders position will be in relation
+            to the sprite (eg: [0, 0] will be centered).
+        `show_collider`: if true will display the collider.
+        `hidden`: if true, sprite will not be drawn to screen.
+        `check_events`: if True will check events,
+            eg: key_presses, mouse clicks ect.
         """
         super().__init__(position=position, hidden=hidden, check_events=check_events)
-        self.collider = collider_type(position=self, onclick=self.onclick, show=show_collider)
+        self.show_collider = show_collider
+        self.collider = collider
+        
+        # how far away collider is from the position of the sprite
+        self.collider_position = Vector2(*self.collider.position)
+
+        # sets the collider to be realitive to sprite
+        self.collider.position += position
+
+        # disable collider drawing so it can be hanndled by the sprite
+        self.collider.hidden = True
     
+    def draw(self):
+        super().draw()
+        if self.show_collider:
+            self.collider.draw()
+
     def onclick(self):
         """called when sprite is clicked"""
         pass
 
-    def set_position(self, position):
+    def set_position(self, position, collider_position:Vector2=None):
+        """sets the position of `self`,
+            `collider_position`: sets the position of collider relative to `self`.
+        """
+        # set the sprite position
         super().set_position(position)
-        self.collider.position = position
+
+        # sets collider postion
+        if collider_position != None:
+            self.collider_position = collider_position
+        self.collider.set_position(self.position+self.collider_position)
+        
+        # make sure `is_mouse_set` is still correct.
+        self.collider.is_mouse_over = self.collider.collides_at(self.mouse_pos)
 
     def destroy(self):
         self.collider.destroy()
@@ -103,12 +119,24 @@ class DraggableSprite(ClickableSprite):
     click_position:Vector2 = Vector2(0, 0)
     click_offset:Vector2 = Vector2(0, 0)
 
-    def __init__(self, position, collider_type, locked=False, show_collider=False, hidden=False):
+    def __init__(self, position:Vector2, collider:Collider, locked=False, show_collider=False, hidden=False):
         """
+        `position`: the location of the sprite onscreen.
+        `collider`: the collider of the sprite.
         `locked`: if true, piece isn't draggable.
+            the coliders position will be in relation
+            to the sprite (eg: [0, 0] will be centered).
+        `show_collider`: if true will display the collider
+        `hidden`: if true, sprite will not be drawn to screen.
+        `check_events`: if True will check events
+            eg: key_presses, mouse clicks ect.
         """
-        super().__init__(position=position, collider_type=collider_type, show_collider=show_collider, hidden=hidden, check_events=True)
+
+        self.show_collider = show_collider
         self.locked = locked
+        super().__init__(position=position, collider=collider, show_collider=show_collider, hidden=hidden, check_events=True)
+        
+        self.collider.onclick = self.onclick
 
     def update(self):
         super().update()
@@ -124,7 +152,7 @@ class DraggableSprite(ClickableSprite):
             DraggableSprite.click_offset = self.position - self.mouse_pos
             DraggableSprite.sprite_dragging = self
 
-    def onlifted(self, started, ended):
+    def onlifted(self, started:Vector2, ended:Vector2):
         """called when sprite is lifted.
             `started` where sprite started dragging
             `ended`: where the sprite ended up.
