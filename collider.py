@@ -19,7 +19,6 @@ class Collider(Sprite):
         self.onclick = onclick
         self.is_mouse_over = self.collides_at(self.mouse_pos)
 
-
     def check_event(self, event):
         if event.type == pygame.MOUSEMOTION:
             self.is_mouse_over = self.collides_at(self.mouse_pos)
@@ -35,7 +34,7 @@ class Collider(Sprite):
 class CircleCollider(Collider):
     """i circular collider."""
     
-    def __init__(self, position:Union[Vector2, Sprite], radius:float, onclick:Callable=None, hidden:bool=True):
+    def __init__(self, position:Vector2, radius:float, onclick:Callable=None, hidden:bool=True):
         """
         `position`: the location of the sprite onscreen.
         `radius`: the radius of circle collider.
@@ -84,11 +83,11 @@ class ClickableSprite(Sprite):
 
         # disable collider drawing so it can be hanndled by the sprite
         self.collider.hidden = True
-    
+
     def draw(self):
-        super().draw()
         if self.show_collider:
             self.collider.draw()
+        super().draw()
 
     def onclick(self):
         """called when sprite is clicked"""

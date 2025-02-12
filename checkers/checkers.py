@@ -10,7 +10,7 @@ from window import GameObject, Sprite
 import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
-from board import Board, Piece
+from board import Board, ActivePiece
 import collider
 
 
@@ -31,7 +31,7 @@ class TestSprite(collider.DraggableSprite):
         super().draw()
 
 
-class CheckersPiece(Piece):
+class CheckersPiece(ActivePiece):
     """a piece for `Checkers` game."""
 
     def __init__(self, player:int, tile, is_king=False):
@@ -39,9 +39,18 @@ class CheckersPiece(Piece):
         super().__init__(
             tile=tile,
             color=checkers_settings.piece_colors[player],
+            collider=collider.CircleCollider(
+                position=Vector2(0, 0),
+                radius=0, # radiues will be when piece is placed on board.
+            ),
+            show_collider=True
         )
         self.player = player
         self.is_king = is_king
+
+    def place_on_board(self, board):
+        super().place_on_board(board)
+        self.collider.radius = self.raduis
 
     def get_moves(self):
         """gets valid moves for piece."""
@@ -80,7 +89,7 @@ class Checkers(Game):
     
     def start_game(self, *players, save_record=False):
         self.set_board()
-        TestSprite(Vector2(100, 100))
+        # TestSprite(Vector2(100, 100))
         return super().start_game(*players, save_record=save_record)
 
     def set_board(self):
