@@ -10,7 +10,7 @@ from window import GameObject, Sprite
 import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
-from board import Board, ActivePiece
+from board import ActiveBoard, ActivePiece
 import collider
 
 
@@ -43,7 +43,8 @@ class CheckersPiece(ActivePiece):
                 position=Vector2(0, 0),
                 radius=0, # radiues will be when piece is placed on board.
             ),
-            show_collider=True
+            # show_collider=True,
+            outline_thickness=2
         )
         self.player = player
         self.is_king = is_king
@@ -82,7 +83,7 @@ class Checkers(Game):
 
     def __init__(self):
         super().__init__()
-        self.board = Board(
+        self.board = ActiveBoard(
             tile_colors=checkers_settings.board['colors'],
             tile_size=checkers_settings.board['tile_size'],
         )

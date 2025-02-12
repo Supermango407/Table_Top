@@ -9,7 +9,7 @@ from collider import DraggableSprite, Collider
 
 class Board(Sprite):
     
-    def __init__(self, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None):
+    def __init__(self, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, check_events:bool=False):
         """
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
@@ -21,6 +21,8 @@ class Board(Sprite):
         `tile_border_width`: the width of the border between tiles
         `tile_border_color`: the color of the border between tiles
             if no color give will default to be an offset of the first index of `tile_colors`
+        `check_events`: if True will check events,
+            eg: key_presses, mouse clicks ect.
         """
         self.anchor = anchor
         self.offset = offset
@@ -52,11 +54,6 @@ class Board(Sprite):
             self.tile_border_color = tile_border_color
 
         self.pieces:dict[Piece] = dict()
-        
-        # piece selected keeps track of last piece click
-        # for games with active pieces (like chess and checkers).
-        # it normaly shows the valid moves for said piece.
-        self.piece_selected:Piece = None
 
         # set the board width and height
         self.board_width = self.tile_count[0]*self.tile_size + self.tile_border_width*(self.tile_count[0]-1)
@@ -67,7 +64,7 @@ class Board(Sprite):
         self.tile_spacing = self.tile_size+self.tile_border_width
         """the spaceing between adjecent tiles"""
 
-        super().__init__(self.position)
+        super().__init__(self.position, check_events=check_events)
 
     def set_position(self) -> None:
         """set global `position` based of `anchor`."""
@@ -97,7 +94,6 @@ class Board(Sprite):
         self.pieces = dict()
 
     def draw(self) -> None:
-        # TODO fix misaligned border
         """the size of the tiles including the boarder"""
 
         # draw a rect with the scale and color of the board
@@ -187,15 +183,50 @@ class Board(Sprite):
         return Vector2(x, y)
 
 
+class ActiveBoard(Board):
+
+    def __init__(self, anchor='center', offset=Vector2(0, 0), tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None):
+        """
+        `anchor`: where the board is placed on the screen eg:
+            top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
+        `offset`: added offset to `position`
+        `tile_count`: the number of tiles in the format (x, y)
+        `tile_size`: the size of tiles
+        `tile_colors`: the color of the tiles
+            if two colors are given colors will be used in checkered pattern
+        `tile_border_width`: the width of the border between tiles
+        `tile_border_color`: the color of the border between tiles
+            if no color give will default to be an offset of the first index of `tile_colors`
+        """
+        super().__init__(anchor=anchor, offset=offset, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
+        
+        # piece selected keeps track of last piece click
+        # for games with active pieces (like chess and checkers).
+        # it normaly shows the valid moves for said piece.
+        self.piece_selected:ActivePiece = None
+    
+    def check_event(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            self.deselect()
+
+    def deselect(self) -> None:
+        """deselects selected piece if one exsists."""
+        if self.piece_selected != None:
+            self.piece_selected.deselect()
+            self.piece_selected = None
+
+
 class Piece(Sprite):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False):
         """
         `tile`: where on board piece is placed.
         `color`: the color of the piece.
         `outline_color`: the color of the piece's outline.
             if left None there wont be an outline.
+        `outline_thickness`: the thickness of the piece's outline.
+            if `outline_color` is None it wont matter.
         `hidden`: if true, sprite will not be drawn to screen.
         `check_events`: if True will check events,
             eg: key_presses, mouse clicks ect.
@@ -203,16 +234,13 @@ class Piece(Sprite):
         self.tile = tile
         self.color = color
         self.outline_color = outline_color
+        self.outline_thickness = outline_thickness
         self.board = None
 
         # position will be set when piece is placed but it needs a place holder.
         # uses Sprite.__init__ instead of super().__init__ because
         # super doesn't work with Active Piece double inheritance.
         Sprite.__init__(self, position=Vector2(0, 0), hidden=hidden)
-
-    def onlifted(self, started, ended):
-        self.set_position(started)
-        super().onlifted(started, ended)
 
     def place_on_board(self, board:Board):
         """called when this piece is placed on a board."""
@@ -222,16 +250,6 @@ class Piece(Sprite):
 
     def draw(self):
         if self.board != None:
-            # draw outline if it exsitst
-            if self.outline_color != None:
-                pygame.draw.circle(
-                    GameObject.window,
-                    self.outline_color,
-                    self.position,
-                    self.raduis,
-                    1,
-                )
-
             # draw piece
             pygame.draw.circle(
                 GameObject.window,
@@ -239,53 +257,74 @@ class Piece(Sprite):
                 self.position,
                 self.raduis,
             )
-            
+
+            # draw outline if it exsitst
+            if self.outline_color != None:
+                pygame.draw.circle(
+                    GameObject.window,
+                    self.outline_color,
+                    self.position,
+                    self.raduis,
+                    self.outline_thickness,
+                )
+
         super().draw()
 
 
 class ActivePiece(Piece, DraggableSprite):
     """a Piece that has moves, and can usally be dragged around."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider:Collider, outline_color:tuple[int, int, int]=None, locked:bool=False, show_collider:bool=False, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider:Collider, selected_outline_color:tuple[int,int,int]=(255, 255, 63), outline_color:tuple[int, int, int]=(None), outline_thickness:int=1, locked:bool=False, show_collider:bool=False, hidden=False):
         """
         `tile`: where on board piece is placed.
         `color`: the color of the piece.
         `collider`: the collider of the sprite.
+        `selected_outline_color`: the oultile color of the sprite when selected.
         `outline_color`: the color of the piece's outline.
             if left None there wont be an outline.
+        `outline_thickness`: the thickness of the piece's outline.
+            if `outline_color` is None it wont matter.
         `locked`: if true, piece isn't draggable.
         `show_collider`: if true will display the collider
         `hidden`: if true, sprite will not be drawn to screen.
         """
         # position will be set when piece is placed but it needs a place holder.
         DraggableSprite.__init__(self, position=Vector2(0, 0), collider=collider, locked=locked, show_collider=show_collider)
-        Piece.__init__(self, tile=tile, color=color, outline_color=outline_color, hidden=hidden)
+        Piece.__init__(self, tile=tile, color=color, outline_color=outline_color, outline_thickness=outline_thickness, hidden=hidden)
         
+        self.board:ActiveBoard = None
+        self.selected_outline_color = selected_outline_color
+
+        # the color of the pieces outline when not selected
+        self.main_outline_color = outline_color
+
         # if this piece is currently selected by board.
         self.selected = False
 
     def move_piece(self, tile:Vector2) -> None:
         """moves self to a tile on `board`."""
         self.tile = tile
-        self.deselect()
+        self.deselect_selected_piece()
 
     def select(self) -> None:
         """sets `self` as selected piece."""
-        self.deselect()
         self.board.piece_selected = self
+        self.outline_color = self.selected_outline_color
         self.selected = True
 
-    def deselect(self) -> None:
-        """sets selected piece to None."""
-        if self.board.piece_selected != None:
-            self.board.piece_selected.selected = False
-            self.board.piece_selected = None
+    def deselect(self):
+        """deselects self and removes it from boards selected."""
+        self.selected = False
+        self.board.piece_selected = None
+        self.outline_color = self.main_outline_color
 
     def get_moves(self) -> list:
         """gets a list of the piece's valid moves."""
         return []
 
     def onlifted(self, started, ended):
-        self.select()
-        return super().onlifted(started, ended)
-
+        super().onlifted(started, ended)
+        self.set_position(started.copy())
+        if self.board.get_tile_at(started.copy()) == self.board.get_tile_at(ended.copy()):
+            self.select()
+    
