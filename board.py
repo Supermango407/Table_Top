@@ -185,7 +185,7 @@ class Board(Sprite):
 
 class ActiveBoard(Board):
 
-    def __init__(self, anchor='center', offset=Vector2(0, 0), tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None):
+    def __init__(self, anchor='center', offset=Vector2(0, 0), tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255)):
         """
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
@@ -197,9 +197,11 @@ class ActiveBoard(Board):
         `tile_border_width`: the width of the border between tiles
         `tile_border_color`: the color of the border between tiles
             if no color give will default to be an offset of the first index of `tile_colors`
+        `move_color`: the color of the avalible move dots.
         """
         super().__init__(anchor=anchor, offset=offset, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
-        
+        self.move_color = move_color
+
         # piece selected keeps track of last piece click
         # for games with active pieces (like chess and checkers).
         # it normaly shows the valid moves for said piece.
@@ -301,6 +303,20 @@ class ActivePiece(Piece, DraggableSprite):
         # if this piece is currently selected by board.
         self.selected = False
 
+    def draw(self):
+        super().draw()
+
+        # if piece selected show valid move dots
+        if self.selected:
+            tiles = self.get_tile_moves()
+            for tile in tiles:
+                pygame.draw.circle(
+                    self.window,
+                    self.board.move_color,
+                    self.board.get_global_position(tile),
+                    self.board.tile_size//8
+                )
+
     def move_piece(self, tile:Vector2) -> None:
         """moves self to a tile on `board`."""
         self.tile = tile
@@ -318,8 +334,8 @@ class ActivePiece(Piece, DraggableSprite):
         self.board.piece_selected = None
         self.outline_color = self.main_outline_color
 
-    def get_moves(self) -> list:
-        """gets a list of the piece's valid moves."""
+    def get_tile_moves(self) -> list[Vector2]:
+        """gets a list of tiles the piece can move to."""
         return []
 
     def onlifted(self, started, ended):

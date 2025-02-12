@@ -14,21 +14,21 @@ from board import ActiveBoard, ActivePiece
 import collider
 
 
-class TestSprite(collider.DraggableSprite):
-    def __init__(self, position):
-        super().__init__(position, collider=collider.CircleCollider(Vector2(0, 0),  50), show_collider=True)
+# class TestSprite(collider.DraggableSprite):
+#     def __init__(self, position):
+#         super().__init__(position, collider=collider.CircleCollider(Vector2(0, 0),  50), show_collider=True)
 
-    def test(self):
-        print('test')
+#     def test(self):
+#         print('test')
 
-    def onlifted(self, started, ended):
-        super().onlifted(started, ended)
-        self.set_position(ended)
-        self.test()
+#     def onlifted(self, started, ended):
+#         super().onlifted(started, ended)
+#         self.set_position(ended)
+#         self.test()
     
-    def draw(self):
-        pygame.draw.circle(self.window, (0, 0, 255), self.position, 50)
-        super().draw()
+#     def draw(self):
+#         pygame.draw.circle(self.window, (0, 0, 255), self.position, 50)
+#         super().draw()
 
 
 class CheckersPiece(ActivePiece):
@@ -53,7 +53,7 @@ class CheckersPiece(ActivePiece):
         super().place_on_board(board)
         self.collider.radius = self.raduis
 
-    def get_moves(self):
+    def get_tile_moves(self):
         """gets valid moves for piece."""
         moves = []
         # add the moves up the board if your player 1 or if your a king
