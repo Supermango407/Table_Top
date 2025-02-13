@@ -66,10 +66,6 @@ class Game(Sprite):
     def draw(self):
         self.turn_text.draw()
 
-    def check_events(self, event) -> None:
-        """checks for inputs eg: key press, mouse clicks, ect."""
-        pass
-
     def next_turn(self) -> None:
         """move to the next player."""
         self.table.turn = (self.table.turn+1)%len(self.players)

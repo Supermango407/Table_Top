@@ -28,7 +28,7 @@ class GameObject(object):
         """called once per frame"""
         pass
 
-    def check_event(self, event):
+    def check_event(self, event:pygame.event.Event):
         """called on event if `self` is an event_handler."""
         pass
 

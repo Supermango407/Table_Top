@@ -2,9 +2,16 @@ from __future__ import annotations
 import pygame
 from pygame import Vector2
 from typing import Union
+from dataclasses import dataclass
 from collections.abc import Callable
 from window import GameObject, Sprite
 from collider import DraggableSprite, Collider
+
+
+@dataclass
+class PieceMove:
+    piece:ActivePiece
+    tile:Vector2
 
 
 class Board(Sprite):
@@ -120,6 +127,19 @@ class Board(Sprite):
                 pygame.draw.rect(self.window, self.tile_border_color, (self.position.x, y_pos_on, self.board_width, self.tile_border_width))
                 y_pos_on += self.tile_spacing
 
+    def tile_on_board(self, tile:Vector2) -> bool:
+        """return true if `tile` is in on the board."""
+        # if x is outside the board, return False.
+        if tile.x < 0 or tile.x > self.tile_count[0]-1:
+            return False
+        
+        # if y is outside the board, return False.
+        if tile.y < 0 or tile.y > self.tile_count[1]-1:
+            return False
+            
+        # else return True
+        return True
+
     def place_piece(self, tile:Vector2, piece:Piece=None, piece_color:tuple[int, int, int]=(127, 127, 127)) -> bool:
         """places `piece` on `tile` if `tile` is empty.
             if `piece` is left None it will create a new Piece with `color`.
@@ -141,7 +161,7 @@ class Board(Sprite):
 
     def get_piece_on(self, tile:Vector2) -> Piece:
         """returns piece on `tile` if it exsits, else returns None."""
-        return self.pieces[self.get_tile_index(tile)]
+        return self.pieces.get(self.get_tile_index(tile))
 
     def get_tile_at(self, position:Vector2) -> Vector2:
         """returns tile at global `position` if it exists"""
@@ -157,8 +177,8 @@ class Board(Sprite):
         
         return position//self.tile_spacing
 
-    # TODO: make this function a generator?
     def get_all_tiles(self) -> list[Vector2]:
+        # TODO: make this function a generator?
         """reutrns a list with all tiles in it."""
         tiles = []
         for x in range(self.tile_count[0]):
@@ -272,6 +292,10 @@ class Piece(Sprite):
 
         super().draw()
 
+    def destroy(self):
+        del(self.board.pieces[self.board.get_tile_index(self.tile)])
+        super().destroy()
+
 
 class ActivePiece(Piece, DraggableSprite):
     """a Piece that has moves, and can usally be dragged around."""
@@ -308,19 +332,24 @@ class ActivePiece(Piece, DraggableSprite):
 
         # if piece selected show valid move dots
         if self.selected:
-            tiles = self.get_tile_moves()
-            for tile in tiles:
+            tile_moves = self.get_tile_moves()
+            for tile_move in tile_moves:
                 pygame.draw.circle(
                     self.window,
                     self.board.move_color,
-                    self.board.get_global_position(tile),
+                    self.board.get_global_position(tile_move.tile),
                     self.board.tile_size//8
                 )
 
     def move_piece(self, tile:Vector2) -> None:
         """moves self to a tile on `board`."""
+        # update board pieces list
+        del(self.board.pieces[self.board.get_tile_index(self.tile)])
+        self.board.pieces[self.board.get_tile_index(tile)] = self
+        
         self.tile = tile
-        self.deselect_selected_piece()
+        self.set_position(self.board.get_global_position(tile))
+        self.board.deselect()
 
     def select(self) -> None:
         """sets `self` as selected piece."""
@@ -334,7 +363,7 @@ class ActivePiece(Piece, DraggableSprite):
         self.board.piece_selected = None
         self.outline_color = self.main_outline_color
 
-    def get_tile_moves(self) -> list[Vector2]:
+    def get_tile_moves(self) -> list[PieceMove]:
         """gets a list of tiles the piece can move to."""
         return []
 
@@ -344,3 +373,7 @@ class ActivePiece(Piece, DraggableSprite):
         if self.board.get_tile_at(started.copy()) == self.board.get_tile_at(ended.copy()):
             self.select()
     
+    def destroy(self):
+        Piece.destroy(self)
+        DraggableSprite.destroy(self)
+

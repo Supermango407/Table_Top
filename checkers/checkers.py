@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pygame
 import threading
 import time
@@ -10,7 +11,7 @@ from window import GameObject, Sprite
 import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
-from board import ActiveBoard, ActivePiece
+from board import ActiveBoard, ActivePiece, PieceMove
 import collider
 
 
@@ -29,6 +30,11 @@ import collider
 #     def draw(self):
 #         pygame.draw.circle(self.window, (0, 0, 255), self.position, 50)
 #         super().draw()
+
+
+@dataclass
+class Move(PieceMove):
+    piece_jumping:CheckersPiece=None
 
 
 class CheckersPiece(ActivePiece):
@@ -55,22 +61,53 @@ class CheckersPiece(ActivePiece):
 
     def get_tile_moves(self):
         """gets valid moves for piece."""
-        moves = []
+        moves:list[Move] = []
+        tile_offsets:list[Vector2] = []
+
         # add the moves up the board if your player 1 or if your a king
         if self.player == 0 or self.is_king:
-            moves.extend([
-                self.tile + Vector2(-1, -1),
-                self.tile + Vector2(1, -1)
+            tile_offsets.extend([
+                Vector2(-1, -1),
+                Vector2(1, -1)
             ])
 
         # add the moves down the board if your player 2 or if your a king
         if self.player == 1 or self.is_king:
-            moves.extend([
-                self.tile + Vector2(-1, 1),
-                self.tile + Vector2(1, 1)
+            tile_offsets.extend([
+                Vector2(-1, 1),
+                Vector2(1, 1)
             ])
         
+        # filter through the invalid moves
+        for tile_offset in tile_offsets:
+            tile = self.tile + tile_offset
+
+            # skip tile if it is not on the board.
+            if not self.board.tile_on_board(tile):
+                continue
+            
+            piece_on_tile:CheckersPiece = self.board.get_piece_on(tile)
+            if piece_on_tile != None:
+                # skip tile if frendly piece is on it
+                if piece_on_tile.player == self.player:
+                    continue
+
+                # if enemy piece is on tile then check the tile behind it.
+                tile_behind_piece = tile_offset*2 + self.tile
+                # if the tile is on the board and no piece is on it,
+                # then you can jump over the enemy piece, and should added
+                # the tile behind the enemy piece to tiles
+                if self.board.tile_on_board(tile_behind_piece) and self.board.get_piece_on(tile_behind_piece) == None:
+                    moves.append(Move(self, tile_behind_piece, piece_on_tile))
+            else:
+                # tile empty, add it to tiles.
+                moves.append(Move(self, tile))
+        
         return moves
+
+    def jump(self):
+        """called when `self` is jumped."""
+        self.destroy()
 
     # TODO
     def king(self):
@@ -88,10 +125,26 @@ class Checkers(Game):
             tile_size=checkers_settings.board['tile_size'],
         )
     
+    def check_event(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            tile_clicked = self.board.get_tile_at(pygame.mouse.get_pos())
+            if tile_clicked != None: # clicked on board
+                if self.board.piece_selected != None:
+                    # if valid move than play move
+                    for move in self.board.piece_selected.get_tile_moves():
+                        if move.tile == tile_clicked:
+                            self.play_move(move)
+                            break
+
     def start_game(self, *players, save_record=False):
         self.set_board()
         # TestSprite(Vector2(100, 100))
         return super().start_game(*players, save_record=save_record)
+
+    def play_move(self, move:Move):
+        move.piece.move_piece(move.tile)
+        if move.piece_jumping != None:
+            move.piece_jumping.jump()
 
     def set_board(self):
         """puts the pieces in there starting position."""
