@@ -34,14 +34,19 @@ import collider
 
 @dataclass
 class Move(PieceMove):
+    piece:CheckersPiece
     piece_jumping:CheckersPiece=None
 
 
 class CheckersPiece(ActivePiece):
     """a piece for `Checkers` game."""
 
-    def __init__(self, player:int, tile, is_king=False):
-        
+    def __init__(self, player:int, tile:Vector2, king_row:int):
+        """
+        `player`: the player who controls the piece.
+        `tile`: the tile the piece is on.
+        `king_row`: the row the piece gets kinged on.
+        """
         super().__init__(
             tile=tile,
             color=checkers_settings.piece_colors[player],
@@ -53,7 +58,28 @@ class CheckersPiece(ActivePiece):
             outline_thickness=2
         )
         self.player = player
-        self.is_king = is_king
+        self.king_row = king_row
+        self.is_king = False
+
+    def draw(self):
+        super().draw()
+
+        # draw king crown
+        if self.is_king:
+            scale = checkers_settings.board['tile_size']//8
+            pygame.draw.polygon(
+                self.window,
+                (255, 255, 0),
+                [
+                    self.position + Vector2(-scale, scale),
+                    self.position + Vector2(-scale, -scale),
+                    self.position + Vector2(-scale//2, 0),
+                    self.position + Vector2(0, -scale),
+                    self.position + Vector2(scale//2, 0),
+                    self.position + Vector2(scale, -scale),
+                    self.position + Vector2(scale, scale),
+                ]
+        )
 
     def place_on_board(self, board):
         super().place_on_board(board)
@@ -63,6 +89,10 @@ class CheckersPiece(ActivePiece):
         """gets valid moves for piece."""
         moves:list[Move] = []
         tile_offsets:list[Vector2] = []
+
+        # if not pieces turn than there are no valid moves
+        if self.player != self.board.game_ref.table.turn:
+            return []
 
         # add the moves up the board if your player 1 or if your a king
         if self.player == 0 or self.is_king:
@@ -109,10 +139,9 @@ class CheckersPiece(ActivePiece):
         """called when `self` is jumped."""
         self.destroy()
 
-    # TODO
     def king(self):
         """changes piece to a king."""
-        pass
+        self.is_king = True
 
 
 class Checkers(Game):
@@ -121,6 +150,7 @@ class Checkers(Game):
     def __init__(self):
         super().__init__()
         self.board = ActiveBoard(
+            game_ref=self,
             tile_colors=checkers_settings.board['colors'],
             tile_size=checkers_settings.board['tile_size'],
         )
@@ -142,43 +172,50 @@ class Checkers(Game):
         return super().start_game(*players, save_record=save_record)
 
     def play_move(self, move:Move):
+        super().play_move(move=move)
         move.piece.move_piece(move.tile)
+        
+        # if jumping a piece, delete the piece jumping
         if move.piece_jumping != None:
             move.piece_jumping.jump()
+        
+        # if at one king row king piece
+        if not move.piece.is_king and move.piece.tile[1] == move.piece.king_row:
+            move.piece.king()
 
     def set_board(self):
         """puts the pieces in there starting position."""
         self.board.clear_board()
         
-        self.place_piece(0, Vector2(0, 7))
-        self.place_piece(0, Vector2(2, 7))
-        self.place_piece(0, Vector2(4, 7))
-        self.place_piece(0, Vector2(6, 7))
-        self.place_piece(0, Vector2(1, 6))
-        self.place_piece(0, Vector2(3, 6))
-        self.place_piece(0, Vector2(5, 6))
-        self.place_piece(0, Vector2(7, 6))
-        self.place_piece(0, Vector2(0, 5))
-        self.place_piece(0, Vector2(2, 5))
-        self.place_piece(0, Vector2(4, 5))
-        self.place_piece(0, Vector2(6, 5))
+        self.place_piece(0, Vector2(0, 7), 0)
+        self.place_piece(0, Vector2(2, 7), 0)
+        self.place_piece(0, Vector2(4, 7), 0)
+        self.place_piece(0, Vector2(6, 7), 0)
+        self.place_piece(0, Vector2(1, 6), 0)
+        self.place_piece(0, Vector2(3, 6), 0)
+        self.place_piece(0, Vector2(5, 6), 0)
+        self.place_piece(0, Vector2(7, 6), 0)
+        self.place_piece(0, Vector2(0, 5), 0)
+        self.place_piece(0, Vector2(2, 5), 0)
+        self.place_piece(0, Vector2(4, 5), 0)
+        self.place_piece(0, Vector2(6, 5), 0)
 
-        self.place_piece(1, Vector2(1, 0))
-        self.place_piece(1, Vector2(3, 0))
-        self.place_piece(1, Vector2(5, 0))
-        self.place_piece(1, Vector2(7, 0))
-        self.place_piece(1, Vector2(0, 1))
-        self.place_piece(1, Vector2(2, 1))
-        self.place_piece(1, Vector2(4, 1))
-        self.place_piece(1, Vector2(6, 1))
-        self.place_piece(1, Vector2(1, 2))
-        self.place_piece(1, Vector2(3, 2))
-        self.place_piece(1, Vector2(5, 2))
-        self.place_piece(1, Vector2(7, 2))
+        self.place_piece(1, Vector2(1, 0), 7)
+        self.place_piece(1, Vector2(3, 0), 7)
+        self.place_piece(1, Vector2(5, 0), 7)
+        self.place_piece(1, Vector2(7, 0), 7)
+        self.place_piece(1, Vector2(0, 1), 7)
+        self.place_piece(1, Vector2(2, 1), 7)
+        self.place_piece(1, Vector2(4, 1), 7)
+        self.place_piece(1, Vector2(6, 1), 7)
+        self.place_piece(1, Vector2(1, 2), 7)
+        self.place_piece(1, Vector2(3, 2), 7)
+        self.place_piece(1, Vector2(5, 2), 7)
+        self.place_piece(1, Vector2(7, 2), 7)
 
-    def place_piece(self, player:int, tile:Vector2):
+    def place_piece(self, player:int, tile:Vector2, king_row:int):
         """places piece on board at `tile`"""
-        piece = CheckersPiece(player, tile)
+        piece = CheckersPiece(player, tile, king_row)
         self.board.place_piece(tile, piece)
 
     def click_test(self):

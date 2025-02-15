@@ -3,6 +3,7 @@ import pygame
 from pygame import Vector2
 from typing import Union
 from dataclasses import dataclass
+from game import Game
 from collections.abc import Callable
 from window import GameObject, Sprite
 from collider import DraggableSprite, Collider
@@ -16,8 +17,9 @@ class PieceMove:
 
 class Board(Sprite):
     
-    def __init__(self, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, check_events:bool=False):
+    def __init__(self, game_ref:Game, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, check_events:bool=False):
         """
+        `game_ref`: a reference to the game the board is apart of.
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
         `offset`: added offset to `position`
@@ -31,6 +33,7 @@ class Board(Sprite):
         `check_events`: if True will check events,
             eg: key_presses, mouse clicks ect.
         """
+        self.game_ref = game_ref
         self.anchor = anchor
         self.offset = offset
         self.tile_count = tile_count
@@ -205,8 +208,9 @@ class Board(Sprite):
 
 class ActiveBoard(Board):
 
-    def __init__(self, anchor='center', offset=Vector2(0, 0), tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255)):
+    def __init__(self, game_ref:Game, anchor='center', offset=Vector2(0, 0), tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255)):
         """
+        `game_ref`: a reference to the game the board is apart of.
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
         `offset`: added offset to `position`
@@ -219,7 +223,7 @@ class ActiveBoard(Board):
             if no color give will default to be an offset of the first index of `tile_colors`
         `move_color`: the color of the avalible move dots.
         """
-        super().__init__(anchor=anchor, offset=offset, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
+        super().__init__(game_ref=game_ref, anchor=anchor, offset=offset, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
         self.move_color = move_color
 
         # piece selected keeps track of last piece click
@@ -367,11 +371,20 @@ class ActivePiece(Piece, DraggableSprite):
         """gets a list of tiles the piece can move to."""
         return []
 
-    def onlifted(self, started, ended):
-        super().onlifted(started, ended)
-        self.set_position(started.copy())
-        if self.board.get_tile_at(started.copy()) == self.board.get_tile_at(ended.copy()):
+    def onlifted(self, sprite_start, sprite_end):
+        super().onlifted(sprite_start, sprite_end)
+        if self.board.get_tile_at(sprite_start.copy()) == self.board.get_tile_at(sprite_end.copy()):
+            self.set_position(sprite_start.copy())
             self.select()
+        else:
+            tile_over = self.board.get_tile_at(sprite_end)
+            if tile_over != None:
+                for move in self.get_tile_moves():
+                    if move.tile == tile_over:
+                        self.board.game_ref.play_move(move=move)
+                        break
+                else:
+                    self.set_position(sprite_start.copy())
     
     def destroy(self):
         Piece.destroy(self)

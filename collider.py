@@ -151,10 +151,10 @@ class DraggableSprite(ClickableSprite):
             DraggableSprite.click_offset = self.position - self.mouse_pos
             DraggableSprite.sprite_dragging = self
 
-    def onlifted(self, started:Vector2, ended:Vector2):
+    def onlifted(self, sprite_start:Vector2, sprite_end:Vector2):
         """called when sprite is lifted.
-            `started` where sprite started dragging
-            `ended`: where the sprite ended up.
+            `sprite_start` where sprite started dragging
+            `sprite_end`: where the sprite ended up.
         """
         self.click_position = Vector2(0, 0)
         self.click_offset = Vector2(0, 0)
