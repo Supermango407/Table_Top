@@ -15,21 +15,16 @@ from board import ActiveBoard, ActivePiece, PieceMove
 import collider
 
 
-# class TestSprite(collider.DraggableSprite):
-#     def __init__(self, position):
-#         super().__init__(position, collider=collider.CircleCollider(Vector2(0, 0),  50), show_collider=True)
-
-#     def test(self):
-#         print('test')
-
-#     def onlifted(self, started, ended):
-#         super().onlifted(started, ended)
-#         self.set_position(ended)
-#         self.test()
-    
-#     def draw(self):
-#         pygame.draw.circle(self.window, (0, 0, 255), self.position, 50)
-#         super().draw()
+@dataclass
+class Table(Game_Table):
+    """curent set up of board
+        `turn`: whos turn it currently is.
+        `pieces`: pieces on board.
+    """
+    pieces:list[CheckersPiece]
+    piece_moving:CheckersPiece = None 
+    """piece that just jumped another piece
+    so is the only piece that can move."""
 
 
 @dataclass
@@ -85,13 +80,19 @@ class CheckersPiece(ActivePiece):
         super().place_on_board(board)
         self.collider.radius = self.raduis
 
-    def get_tile_moves(self):
+    def get_tile_moves(self) -> Move:
         """gets valid moves for piece."""
         moves:list[Move] = []
         tile_offsets:list[Vector2] = []
 
         # if not pieces turn than there are no valid moves
         if self.player != self.board.game_ref.table.turn:
+            return []
+
+        # if a piece was just jumped
+        piece_moving:CheckersPiece = self.board.game_ref.table.piece_moving
+        """the piece that just jumped. will be None if no piece was just jumped."""
+        if piece_moving != None and piece_moving != self:
             return []
 
         # add the moves up the board if your player 1 or if your a king
@@ -130,8 +131,9 @@ class CheckersPiece(ActivePiece):
                 if self.board.tile_on_board(tile_behind_piece) and self.board.get_piece_on(tile_behind_piece) == None:
                     moves.append(Move(self, tile_behind_piece, piece_on_tile))
             else:
-                # tile empty, add it to tiles.
-                moves.append(Move(self, tile))
+                # tile empty. if didn't just jump than add move to list
+                if piece_moving == None:
+                    moves.append(Move(self, tile))
         
         return moves
 
@@ -139,7 +141,7 @@ class CheckersPiece(ActivePiece):
         """called when `self` is jumped."""
         self.destroy()
 
-    def king(self):
+    def promote(self):
         """changes piece to a king."""
         self.is_king = True
 
@@ -149,6 +151,7 @@ class Checkers(Game):
 
     def __init__(self):
         super().__init__()
+        self.table:Table = Table(turn=-1, pieces=[])
         self.board = ActiveBoard(
             game_ref=self,
             tile_colors=checkers_settings.board['colors'],
@@ -159,7 +162,8 @@ class Checkers(Game):
         if event.type == pygame.MOUSEBUTTONUP:
             tile_clicked = self.board.get_tile_at(pygame.mouse.get_pos())
             if tile_clicked != None: # clicked on board
-                if self.board.piece_selected != None:
+                # if piece is selected but not dragging
+                if self.board.piece_selected != None and not self.board.piece_selected.sprite_dragging:
                     # if valid move than play move
                     for move in self.board.piece_selected.get_tile_moves():
                         if move.tile == tile_clicked:
@@ -168,21 +172,45 @@ class Checkers(Game):
 
     def start_game(self, *players, save_record=False):
         self.set_board()
+        self.table.piece_moving = None
         # TestSprite(Vector2(100, 100))
         return super().start_game(*players, save_record=save_record)
 
     def play_move(self, move:Move):
-        super().play_move(move=move)
         move.piece.move_piece(move.tile)
         
         # if jumping a piece, delete the piece jumping
         if move.piece_jumping != None:
             move.piece_jumping.jump()
-        
-        # if at one king row king piece
-        if not move.piece.is_king and move.piece.tile[1] == move.piece.king_row:
-            move.piece.king()
+            for move in move.piece.get_tile_moves():
+                if move.piece_jumping != None:
+                    # if selected piece jumped and can jump another piece
+                    # set piece_moving to selected piece
+                    self.table.piece_moving = move.piece
+                    break
+            else:
+                # if selected piece jumped but doesn't
+                # have any jump moves than move to next turn
+                super().play_move(move=move)
+        else:
+            # if didn't jump than move to next turn
+            super().play_move()
 
+        # if selected piece on king row than promote the piece
+        if not move.piece.is_king and move.piece.tile[1] == move.piece.king_row:
+            move.piece.promote()
+
+    def next_turn(self):
+        super().next_turn()
+        self.table.piece_moving = None
+
+        # set locked of pieces
+        for piece in self.table.pieces:
+            if piece.player == self.table.turn:
+                piece.locked = False
+            else:
+                piece.locked = True
+        
     def set_board(self):
         """puts the pieces in there starting position."""
         self.board.clear_board()
@@ -217,6 +245,7 @@ class Checkers(Game):
         """places piece on board at `tile`"""
         piece = CheckersPiece(player, tile, king_row)
         self.board.place_piece(tile, piece)
+        self.table.pieces.append(piece)
 
     def click_test(self):
         print(self)

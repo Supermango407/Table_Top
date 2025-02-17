@@ -314,7 +314,7 @@ class ActivePiece(Piece, DraggableSprite):
             if left None there wont be an outline.
         `outline_thickness`: the thickness of the piece's outline.
             if `outline_color` is None it wont matter.
-        `locked`: if true, piece isn't draggable.
+        `locked`: if true, piece isn't selectable.
         `show_collider`: if true will display the collider
         `hidden`: if true, sprite will not be drawn to screen.
         """
@@ -357,6 +357,10 @@ class ActivePiece(Piece, DraggableSprite):
 
     def select(self) -> None:
         """sets `self` as selected piece."""
+        # cant select if piece is locked
+        if self.locked:
+            return
+        
         self.board.piece_selected = self
         self.outline_color = self.selected_outline_color
         self.selected = True
@@ -379,10 +383,12 @@ class ActivePiece(Piece, DraggableSprite):
         else:
             tile_over = self.board.get_tile_at(sprite_end)
             if tile_over != None:
+                # check to see if piece is over a valid tile
                 for move in self.get_tile_moves():
                     if move.tile == tile_over:
                         self.board.game_ref.play_move(move=move)
                         break
+                # if not a valid tile, move back to starting spot
                 else:
                     self.set_position(sprite_start.copy())
     
