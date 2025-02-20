@@ -31,29 +31,35 @@ class Game(Sprite):
     """the Table_Top games class."""
     game_vars:GameVars = GameVars("GAME_PARENT_CLASS", 0)
 
-    def __init__(self):
+    def __init__(self, display_game:bool=True):
+        """
+        `display_game`: if True the game will be shown on the screen,
+            else it will be hidden, for processing.  
+        """
         self.players = []
         self.save_record = False
+        self.display_game = display_game # TODO: implement fully. GameObject.window != None
 
         # the current set up of the game
         self.table:Game_Table = Game_Table(turn=-1)
         # record of game played
         self.history = ""
 
-        # `turn_text`: text of the player whose turn it is
-        if GameObject.window != None:
-            self.turn_text = Text(
-                "",
-                anchor='top',
-                position=Vector2(GameObject.window.get_width()//2, 16),
-                color=(255, 255, 255)
-            )
-        
         # if in middle of game or not
         self.game_running = False
         
-        super().__init__(Vector2(0, 0), check_events=True)
+        super().__init__(check_events=True)
 
+        # `turn_text`: text of the player whose turn it is
+        if self.display_game:
+            self.turn_text = Text(
+                value="",
+                position=Vector2(0, 16),
+                anchor='top',
+                color=(255, 255, 255),
+                parrent=self
+            )
+        
     def start_game(self, *players:tuple[Player], save_record=False):
         """starts new game."""
         self.game_running = True
@@ -64,7 +70,14 @@ class Game(Sprite):
         self.next_turn()
 
     def draw(self):
-        self.turn_text.draw()
+        if self.display_game:
+            self.turn_text.draw()
+
+    def get_width(self):
+        return self.parrent.get_width()
+    
+    def get_height(self):
+        return self.parrent.get_height()
 
     def next_turn(self) -> None:
         """move to the next player."""
@@ -72,15 +85,19 @@ class Game(Sprite):
         self.set_moves()
         self.set_turn_text(self.table.turn)
         
-    def play_move(self, move=None) -> None:
-        """plays `move` by player whos turn it is.
+    def play_move(self, move=None, auto_next_turn:bool=True) -> None:
+        """
+        plays `move` by player whos turn it is.
         then checks to see if the game ended
-        if not, goes to the next player's turn."""
+        if not, goes to the next player's turn.
+            `auto_next_turn`: if set to False will not automaticly go to next turn.
+        """
         self.record_move(move)
         
         winner = self.get_winner()
         if winner == None:
-            self.next_turn()
+            if auto_next_turn:
+                self.next_turn()
         else:
             self.end_game(winner)
         
@@ -100,7 +117,7 @@ class Game(Sprite):
 
     def set_turn_text(self, player:int) -> None:
         """set the text, of turn text, if it exsists, to the `player`s name."""
-        if GameObject.window != None:
+        if self.display_game:
             self.turn_text.set_text(self.players[player].name)
 
     def valid_move(self, move=None) -> bool:
@@ -109,7 +126,7 @@ class Game(Sprite):
 
     def set_winner_text(self, winner) -> None:
         """sets the turn_text, if it exsists, to the Winner of game."""
-        if GameObject.window != None:
+        if self.display_game:
             if type(winner) == int:
                 self.turn_text.set_text(self.players[winner].name+" Wins")
             elif type(winner) == str:

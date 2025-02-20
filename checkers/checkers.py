@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import sys
 sys.path.append('../table_top')
 import checkers.checkers_settings as checkers_settings
-from window import GameObject, Sprite
+from window import GameObject, Sprite, Button
 import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
@@ -22,9 +22,12 @@ class Table(Game_Table):
         `pieces`: pieces on board.
     """
     pieces:list[CheckersPiece]
-    piece_moving:CheckersPiece = None 
-    """piece that just jumped another piece
-    so is the only piece that can move."""
+    
+    piece_jumping:CheckersPiece = None 
+    # if player jumped a piece, the piece that
+    # jumped is the only piece that can jump again,
+    # and `piece_jumping` will be set to the piece that jumped.
+    # else `piece_jumping` will be set to None, and any piece can move.
 
 
 @dataclass
@@ -36,7 +39,7 @@ class Move(PieceMove):
 class CheckersPiece(ActivePiece):
     """a piece for `Checkers` game."""
 
-    def __init__(self, player:int, tile:Vector2, king_row:int):
+    def __init__(self, player:int, tile:Vector2, kinging_row:int):
         """
         `player`: the player who controls the piece.
         `tile`: the tile the piece is on.
@@ -53,7 +56,7 @@ class CheckersPiece(ActivePiece):
             outline_thickness=2
         )
         self.player = player
-        self.king_row = king_row
+        self.kinging_row = kinging_row
         self.is_king = False
 
     def draw(self):
@@ -66,13 +69,13 @@ class CheckersPiece(ActivePiece):
                 self.window,
                 (255, 255, 0),
                 [
-                    self.position + Vector2(-scale, scale),
-                    self.position + Vector2(-scale, -scale),
-                    self.position + Vector2(-scale//2, 0),
-                    self.position + Vector2(0, -scale),
-                    self.position + Vector2(scale//2, 0),
-                    self.position + Vector2(scale, -scale),
-                    self.position + Vector2(scale, scale),
+                    self.global_position + Vector2(-scale, scale),
+                    self.global_position + Vector2(-scale, -scale),
+                    self.global_position + Vector2(-scale//2, 0),
+                    self.global_position + Vector2(0, -scale),
+                    self.global_position + Vector2(scale//2, 0),
+                    self.global_position + Vector2(scale, -scale),
+                    self.global_position + Vector2(scale, scale),
                 ]
         )
 
@@ -90,9 +93,9 @@ class CheckersPiece(ActivePiece):
             return []
 
         # if a piece was just jumped
-        piece_moving:CheckersPiece = self.board.game_ref.table.piece_moving
+        piece_jumping:CheckersPiece = self.board.game_ref.table.piece_jumping
         """the piece that just jumped. will be None if no piece was just jumped."""
-        if piece_moving != None and piece_moving != self:
+        if piece_jumping != None and piece_jumping != self:
             return []
 
         # add the moves up the board if your player 1 or if your a king
@@ -132,7 +135,7 @@ class CheckersPiece(ActivePiece):
                     moves.append(Move(self, tile_behind_piece, piece_on_tile))
             else:
                 # tile empty. if didn't just jump than add move to list
-                if piece_moving == None:
+                if piece_jumping == None:
                     moves.append(Move(self, tile))
         
         return moves
@@ -157,6 +160,9 @@ class Checkers(Game):
             tile_colors=checkers_settings.board['colors'],
             tile_size=checkers_settings.board['tile_size'],
         )
+
+        if self.display_game:
+            self.next_turn_button = Button(None, text_value='Next Turn', anchor='bottom')
     
     def check_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -172,37 +178,37 @@ class Checkers(Game):
 
     def start_game(self, *players, save_record=False):
         self.set_board()
-        self.table.piece_moving = None
-        # TestSprite(Vector2(100, 100))
-        return super().start_game(*players, save_record=save_record)
+        self.table.piece_jumping = None
+
+        # go to next turn after move is played
+        self.auto_next_turn:bool=True
+
+        super().start_game(*players, save_record=save_record)
 
     def play_move(self, move:Move):
         move.piece.move_piece(move.tile)
+        self.auto_next_turn=True
         
-        # if jumping a piece, delete the piece jumping
+        # if jumping a piece
         if move.piece_jumping != None:
             move.piece_jumping.jump()
-            for move in move.piece.get_tile_moves():
-                if move.piece_jumping != None:
-                    # if selected piece jumped and can jump another piece
-                    # set piece_moving to selected piece
-                    self.table.piece_moving = move.piece
-                    break
-            else:
-                # if selected piece jumped but doesn't
-                # have any jump moves than move to next turn
-                super().play_move(move=move)
-        else:
-            # if didn't jump than move to next turn
-            super().play_move()
 
-        # if selected piece on king row than promote the piece
-        if not move.piece.is_king and move.piece.tile[1] == move.piece.king_row:
+            # set piece_jumping to the piece thats jumping,
+            # so that that is the only piece that can jump again.
+            self.table.piece_jumping = move.piece
+            
+            # set auto_next_turn to false
+            self.auto_next_turn=False
+
+        # if selected piece on kinging row than promote the piece
+        if not move.piece.is_king and move.piece.tile[1] == move.piece.kinging_row:
             move.piece.promote()
+        
+        super().play_move(auto_next_turn=self.auto_next_turn)
 
     def next_turn(self):
         super().next_turn()
-        self.table.piece_moving = None
+        self.table.piece_jumping = None
 
         # set locked of pieces
         for piece in self.table.pieces:

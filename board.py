@@ -17,12 +17,12 @@ class PieceMove:
 
 class Board(Sprite):
     
-    def __init__(self, game_ref:Game, anchor:str='center', offset:pygame.Vector2=Vector2(0, 0), tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, check_events:bool=False):
+    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, check_events:bool=False):
         """
-        `game_ref`: a reference to the game the board is apart of.
+        `position`: the location of the sprite onscreen.
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
-        `offset`: added offset to `position`
+        `game_ref`: a reference to the game the board is apart of.
         `tile_count`: the number of tiles in the format (x, y)
         `tile_size`: the size of tiles
         `tile_colors`: the color of the tiles
@@ -34,8 +34,6 @@ class Board(Sprite):
             eg: key_presses, mouse clicks ect.
         """
         self.game_ref = game_ref
-        self.anchor = anchor
-        self.offset = offset
         self.tile_count = tile_count
         self.tile_size = tile_size
         self.tile_colors = tile_colors
@@ -69,33 +67,10 @@ class Board(Sprite):
         self.board_width = self.tile_count[0]*self.tile_size + self.tile_border_width*(self.tile_count[0]-1)
         self.board_height = self.tile_count[1]*self.tile_size + self.tile_border_width*(self.tile_count[1]-1)
         
-        self.position = Vector2(0, 0)
-        self.set_position()
         self.tile_spacing = self.tile_size+self.tile_border_width
         """the spaceing between adjecent tiles"""
 
-        super().__init__(self.position, check_events=check_events)
-
-    def set_position(self) -> None:
-        """set global `position` based of `anchor`."""
-        if GameObject.window != None:
-            # set `x` base on `self.anchor` and `self.offset`
-            if 'left' in self.anchor:
-                x = self.offset.x
-            elif 'right' in self.anchor:
-                x = self.offset.x+self.window.get_width()-self.board_width
-            else:
-                x = self.offset.x+self.window.get_width()//2-self.board_width//2
-                
-            # set `y` base on `self.anchor`
-            if 'top' in self.anchor:
-                y = self.offset.y
-            elif 'bottom' in self.anchor:
-                y = self.offset.y+self.window.get_height()-self.board_height
-            else:
-                y = self.offset.y+self.window.get_height()//2-self.board_height//2
-            
-            self.position = Vector2(x, y)
+        super().__init__(position=position, anchor=anchor, check_events=check_events)
 
     def clear_board(self):
         """deletes all pieces on the board."""
@@ -107,28 +82,34 @@ class Board(Sprite):
         """the size of the tiles including the boarder"""
 
         # draw a rect with the scale and color of the board
-        pygame.draw.rect(self.window, self.tile_colors[0], (self.position.x, self.position.y, self.board_width, self.board_height))
+        pygame.draw.rect(self.window, self.tile_colors[0], (self.global_position.x, self.global_position.y, self.board_width, self.board_height))
 
         # add checkered pattern if there is than more one color
         if len(self.tile_colors) > 1:
             for x in range(self.tile_count[0]):
                 for y in range(self.tile_count[1]):
                     if (x+y) % 2 == 0:
-                        pygame.draw.rect(self.window, self.tile_colors[1], (self.position.x + x*self.tile_spacing, self.position.y + y*self.tile_spacing, self.tile_size, self.tile_size))
+                        pygame.draw.rect(self.window, self.tile_colors[1], (self.global_position.x + x*self.tile_spacing, self.global_position.y + y*self.tile_spacing, self.tile_size, self.tile_size))
 
         # draw border if it exsist
         if self.tile_border_width != 0:
-            x_pos_on = self.tile_size+self.position.x
+            x_pos_on = self.tile_size+self.global_position.x
             """the next vertical line drawn's x pos"""
             for _ in range(1, self.tile_count[0]):
                 pygame.draw.rect(self.window, self.tile_border_color, (x_pos_on, self.position.y, self.tile_border_width, self.board_height))
                 x_pos_on += self.tile_spacing
 
-            y_pos_on = self.tile_size+self.position.y
+            y_pos_on = self.tile_size+self.global_position.y
             """the next horizantal line drawn's y pos"""
             for _ in range(1, self.tile_count[1]):
-                pygame.draw.rect(self.window, self.tile_border_color, (self.position.x, y_pos_on, self.board_width, self.tile_border_width))
+                pygame.draw.rect(self.window, self.tile_border_color, (self.global_position.x, y_pos_on, self.board_width, self.tile_border_width))
                 y_pos_on += self.tile_spacing
+
+    def get_width(self):
+        return self.board_width
+    
+    def get_height(self):
+        return self.board_height
 
     def tile_on_board(self, tile:Vector2) -> bool:
         """return true if `tile` is in on the board."""
@@ -168,7 +149,7 @@ class Board(Sprite):
 
     def get_tile_at(self, position:Vector2) -> Vector2:
         """returns tile at global `position` if it exists"""
-        position -= self.position
+        position -= self.global_position
 
         # return None of not over board
         if min(position) < 0 or position.x > self.board_width or position.y > self.board_height:
@@ -191,7 +172,7 @@ class Board(Sprite):
 
     def get_global_position(self, tile:Vector2) -> Vector2:
         """returns the global position of `tile`"""
-        return self.position + Vector2(1, 1)*self.tile_size//2 + tile*self.tile_spacing
+        return self.global_position + Vector2(1, 1)*self.tile_size//2 + tile*self.tile_spacing
     
     def get_tile_index(self, tile:Vector2) -> int:
         """returns what number `tile` is
@@ -208,12 +189,12 @@ class Board(Sprite):
 
 class ActiveBoard(Board):
 
-    def __init__(self, game_ref:Game, anchor='center', offset=Vector2(0, 0), tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255)):
+    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255)):
         """
-        `game_ref`: a reference to the game the board is apart of.
+        `position`: the location of the sprite onscreen.
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
-        `offset`: added offset to `position`
+        `game_ref`: a reference to the game the board is apart of.
         `tile_count`: the number of tiles in the format (x, y)
         `tile_size`: the size of tiles
         `tile_colors`: the color of the tiles
@@ -223,7 +204,7 @@ class ActiveBoard(Board):
             if no color give will default to be an offset of the first index of `tile_colors`
         `move_color`: the color of the avalible move dots.
         """
-        super().__init__(game_ref=game_ref, anchor=anchor, offset=offset, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
+        super().__init__(game_ref=game_ref, position=position, anchor=anchor, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
         self.move_color = move_color
 
         # piece selected keeps track of last piece click
@@ -280,7 +261,7 @@ class Piece(Sprite):
             pygame.draw.circle(
                 GameObject.window,
                 self.color,
-                self.position,
+                self.global_position,
                 self.raduis,
             )
 
@@ -289,7 +270,7 @@ class Piece(Sprite):
                 pygame.draw.circle(
                     GameObject.window,
                     self.outline_color,
-                    self.position,
+                    self.global_position,
                     self.raduis,
                     self.outline_thickness,
                 )

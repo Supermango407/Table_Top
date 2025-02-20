@@ -71,7 +71,6 @@ class ClickableSprite(Sprite):
         `check_events`: if True will check events,
             eg: key_presses, mouse clicks ect.
         """
-        super().__init__(position=position, hidden=hidden, check_events=check_events)
         self.show_collider = show_collider
         self.collider = collider
         
@@ -83,6 +82,8 @@ class ClickableSprite(Sprite):
 
         # disable collider drawing so it can be hanndled by the sprite
         self.collider.hidden = True
+        
+        super().__init__(position=position, hidden=hidden, check_events=check_events)
 
     def draw(self):
         if self.show_collider:
@@ -93,12 +94,12 @@ class ClickableSprite(Sprite):
         """called when sprite is clicked"""
         pass
 
-    def set_position(self, position, collider_position:Vector2=None):
+    def set_position(self, position:Vector2, collider_position:Vector2=None, anchor:str=None):
         """sets the position of `self`,
             `collider_position`: sets the position of collider relative to `self`.
         """
         # set the sprite position
-        super().set_position(position)
+        super().set_position(position, anchor)
 
         # sets collider postion
         if collider_position != None:

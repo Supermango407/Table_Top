@@ -15,7 +15,7 @@ from player import Player
 
 def start() -> None:
     """called once when game starts up"""
-    GameObject.window = window
+    GameObject.set_window(window)
     GameObject.font = pygame.font.SysFont('Consolas', settings.font_size)
     
     start_game(Checkers)
@@ -30,7 +30,7 @@ def update() -> None:
         gameobject.update()
 
     for sprite in Sprite.childeren:
-        if not sprite.hidden:
+        if not sprite.hidden and not isinstance(sprite.parrent, Sprite):
             sprite.draw()
 
     pygame.display.update()
