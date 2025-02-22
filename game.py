@@ -69,10 +69,6 @@ class Game(Sprite):
         self.history = ''
         self.next_turn()
 
-    def draw(self):
-        if self.display_game:
-            self.turn_text.draw()
-
     def get_width(self):
         return self.parrent.get_width()
     

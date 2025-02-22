@@ -52,7 +52,7 @@ class CheckersPiece(ActivePiece):
                 position=Vector2(0, 0),
                 radius=0, # radiues will be when piece is placed on board.
             ),
-            # show_collider=True,
+            show_collider=True,
             outline_thickness=2
         )
         self.player = player
@@ -162,7 +162,8 @@ class Checkers(Game):
         )
 
         if self.display_game:
-            self.next_turn_button = Button(None, text_value='Next Turn', anchor='bottom')
+            self.next_turn_button = Button(None, text_value='Next Turn', anchor='bottom', parrent=self)
+            self.set_position()
     
     def check_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
@@ -221,30 +222,30 @@ class Checkers(Game):
         """puts the pieces in there starting position."""
         self.board.clear_board()
         
-        self.place_piece(0, Vector2(0, 7), 0)
-        self.place_piece(0, Vector2(2, 7), 0)
-        self.place_piece(0, Vector2(4, 7), 0)
-        self.place_piece(0, Vector2(6, 7), 0)
-        self.place_piece(0, Vector2(1, 6), 0)
-        self.place_piece(0, Vector2(3, 6), 0)
-        self.place_piece(0, Vector2(5, 6), 0)
-        self.place_piece(0, Vector2(7, 6), 0)
-        self.place_piece(0, Vector2(0, 5), 0)
-        self.place_piece(0, Vector2(2, 5), 0)
-        self.place_piece(0, Vector2(4, 5), 0)
-        self.place_piece(0, Vector2(6, 5), 0)
+        # self.place_piece(0, Vector2(0, 7), 0)
+        # self.place_piece(0, Vector2(2, 7), 0)
+        # self.place_piece(0, Vector2(4, 7), 0)
+        # self.place_piece(0, Vector2(6, 7), 0)
+        # self.place_piece(0, Vector2(1, 6), 0)
+        # self.place_piece(0, Vector2(3, 6), 0)
+        # self.place_piece(0, Vector2(5, 6), 0)
+        # self.place_piece(0, Vector2(7, 6), 0)
+        # self.place_piece(0, Vector2(0, 5), 0)
+        # self.place_piece(0, Vector2(2, 5), 0)
+        # self.place_piece(0, Vector2(4, 5), 0)
+        # self.place_piece(0, Vector2(6, 5), 0)
 
-        self.place_piece(1, Vector2(1, 0), 7)
-        self.place_piece(1, Vector2(3, 0), 7)
-        self.place_piece(1, Vector2(5, 0), 7)
-        self.place_piece(1, Vector2(7, 0), 7)
-        self.place_piece(1, Vector2(0, 1), 7)
-        self.place_piece(1, Vector2(2, 1), 7)
-        self.place_piece(1, Vector2(4, 1), 7)
-        self.place_piece(1, Vector2(6, 1), 7)
-        self.place_piece(1, Vector2(1, 2), 7)
-        self.place_piece(1, Vector2(3, 2), 7)
-        self.place_piece(1, Vector2(5, 2), 7)
+        # self.place_piece(1, Vector2(1, 0), 7)
+        # self.place_piece(1, Vector2(3, 0), 7)
+        # self.place_piece(1, Vector2(5, 0), 7)
+        # self.place_piece(1, Vector2(7, 0), 7)
+        # self.place_piece(1, Vector2(0, 1), 7)
+        # self.place_piece(1, Vector2(2, 1), 7)
+        # self.place_piece(1, Vector2(4, 1), 7)
+        # self.place_piece(1, Vector2(6, 1), 7)
+        # self.place_piece(1, Vector2(1, 2), 7)
+        # self.place_piece(1, Vector2(3, 2), 7)
+        # self.place_piece(1, Vector2(5, 2), 7)
         self.place_piece(1, Vector2(7, 2), 7)
 
     def place_piece(self, player:int, tile:Vector2, king_row:int):

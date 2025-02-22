@@ -26,10 +26,10 @@ def update() -> None:
     window.fill(settings.background_color)
     check_events()
 
-    for gameobject in GameObject.childeren:
+    for gameobject in GameObject.instances:
         gameobject.update()
 
-    for sprite in Sprite.childeren:
+    for sprite in Sprite.instances:
         if not sprite.hidden and not isinstance(sprite.parrent, Sprite):
             sprite.draw()
 

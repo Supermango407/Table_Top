@@ -17,7 +17,7 @@ class PieceMove:
 
 class Board(Sprite):
     
-    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, check_events:bool=False):
+    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, parrent:Sprite=None, check_events:bool=False):
         """
         `position`: the location of the sprite onscreen.
         `anchor`: where the board is placed on the screen eg:
@@ -30,6 +30,9 @@ class Board(Sprite):
         `tile_border_width`: the width of the border between tiles
         `tile_border_color`: the color of the border between tiles
             if no color give will default to be an offset of the first index of `tile_colors`
+        `parrent`: what object the sprite is placed relitive to.
+            defaults to Window.
+            if not None the sprite wont be drawn, so it can be drawn in the parrents script.
         `check_events`: if True will check events,
             eg: key_presses, mouse clicks ect.
         """
@@ -70,7 +73,7 @@ class Board(Sprite):
         self.tile_spacing = self.tile_size+self.tile_border_width
         """the spaceing between adjecent tiles"""
 
-        super().__init__(position=position, anchor=anchor, check_events=check_events)
+        super().__init__(position=position, anchor=anchor, parrent=parrent, check_events=check_events)
 
     def clear_board(self):
         """deletes all pieces on the board."""
@@ -104,6 +107,8 @@ class Board(Sprite):
             for _ in range(1, self.tile_count[1]):
                 pygame.draw.rect(self.window, self.tile_border_color, (self.global_position.x, y_pos_on, self.board_width, self.tile_border_width))
                 y_pos_on += self.tile_spacing
+
+        super().draw()
 
     def get_width(self):
         return self.board_width
@@ -170,9 +175,9 @@ class Board(Sprite):
                 tiles.append(Vector2(x, y))
         return tiles
 
-    def get_global_position(self, tile:Vector2) -> Vector2:
-        """returns the global position of `tile`"""
-        return self.global_position + Vector2(1, 1)*self.tile_size//2 + tile*self.tile_spacing
+    def get_tile_position(self, tile:Vector2) -> Vector2:
+        """returns the global position of `tile`, relitive to the board."""
+        return Vector2(1, 1)*self.tile_size//2 + tile*self.tile_spacing
     
     def get_tile_index(self, tile:Vector2) -> int:
         """returns what number `tile` is
@@ -189,7 +194,7 @@ class Board(Sprite):
 
 class ActiveBoard(Board):
 
-    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255)):
+    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255), parrent:Sprite=None):
         """
         `position`: the location of the sprite onscreen.
         `anchor`: where the board is placed on the screen eg:
@@ -203,6 +208,9 @@ class ActiveBoard(Board):
         `tile_border_color`: the color of the border between tiles
             if no color give will default to be an offset of the first index of `tile_colors`
         `move_color`: the color of the avalible move dots.
+        `parrent`: what object the sprite is placed relitive to.
+            defaults to Window.
+            if not None the sprite wont be drawn, so it can be drawn in the parrents script.
         """
         super().__init__(game_ref=game_ref, position=position, anchor=anchor, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
         self.move_color = move_color
@@ -226,7 +234,7 @@ class ActiveBoard(Board):
 class Piece(Sprite):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False, parrent:Sprite=None, check_events:bool=False):
         """
         `tile`: where on board piece is placed.
         `color`: the color of the piece.
@@ -235,6 +243,9 @@ class Piece(Sprite):
         `outline_thickness`: the thickness of the piece's outline.
             if `outline_color` is None it wont matter.
         `hidden`: if true, sprite will not be drawn to screen.
+        `parrent`: what object the sprite is placed relitive to.
+            defaults to Window.
+            if not None the sprite wont be drawn, so it can be drawn in the parrents script.
         `check_events`: if True will check events,
             eg: key_presses, mouse clicks ect.
         """
@@ -247,14 +258,15 @@ class Piece(Sprite):
         # position will be set when piece is placed but it needs a place holder.
         # uses Sprite.__init__ instead of super().__init__ because
         # super doesn't work with Active Piece double inheritance.
-        Sprite.__init__(self, position=Vector2(0, 0), hidden=hidden)
+        Sprite.__init__(self, position=Vector2(0, 0), hidden=hidden, parrent=parrent, check_events=check_events)
 
     def place_on_board(self, board:Board):
         """called when this piece is placed on a board."""
         self.board = board
+        self.board.add_child(self)
         self.raduis = self.board.tile_size*0.4
-        self.set_position(board.get_global_position(self.tile))
-
+        self.set_position(self.board.get_tile_position(self.tile))
+        
     def draw(self):
         if self.board != None:
             # draw piece
@@ -274,7 +286,6 @@ class Piece(Sprite):
                     self.raduis,
                     self.outline_thickness,
                 )
-
         super().draw()
 
     def destroy(self):
@@ -285,7 +296,7 @@ class Piece(Sprite):
 class ActivePiece(Piece, DraggableSprite):
     """a Piece that has moves, and can usally be dragged around."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider:Collider, selected_outline_color:tuple[int,int,int]=(255, 255, 63), outline_color:tuple[int, int, int]=(None), outline_thickness:int=1, locked:bool=False, show_collider:bool=False, hidden=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], collider:Collider, selected_outline_color:tuple[int,int,int]=(255, 255, 63), outline_color:tuple[int, int, int]=(None), outline_thickness:int=1, locked:bool=False, show_collider:bool=False, hidden=False, parrent:Sprite=None):
         """
         `tile`: where on board piece is placed.
         `color`: the color of the piece.
@@ -298,10 +309,13 @@ class ActivePiece(Piece, DraggableSprite):
         `locked`: if true, piece isn't selectable.
         `show_collider`: if true will display the collider
         `hidden`: if true, sprite will not be drawn to screen.
+        `parrent`: what object the sprite is placed relitive to.
+            defaults to Window.
+            if not None the sprite wont be drawn, so it can be drawn in the parrents script.
         """
         # position will be set when piece is placed but it needs a place holder.
-        DraggableSprite.__init__(self, position=Vector2(0, 0), collider=collider, locked=locked, show_collider=show_collider)
-        Piece.__init__(self, tile=tile, color=color, outline_color=outline_color, outline_thickness=outline_thickness, hidden=hidden)
+        Piece.__init__(self, tile=tile, color=color, outline_color=outline_color, outline_thickness=outline_thickness, hidden=hidden, parrent=parrent)
+        DraggableSprite.__init__(self, position=Vector2(0, 0), collider=collider, locked=locked, show_collider=show_collider,parrent=parrent)
         
         self.board:ActiveBoard = None
         self.selected_outline_color = selected_outline_color
@@ -322,9 +336,13 @@ class ActivePiece(Piece, DraggableSprite):
                 pygame.draw.circle(
                     self.window,
                     self.board.move_color,
-                    self.board.get_global_position(tile_move.tile),
+                    self.board.get_tile_position(tile_move.tile),
                     self.board.tile_size//8
                 )
+
+    def set_position(self, position=None, anchor=None):
+        # Piece.set_position(self, position, anchor)
+        DraggableSprite.set_position(self, position, anchor)
 
     def move_piece(self, tile:Vector2) -> None:
         """moves self to a tile on `board`."""
@@ -333,7 +351,7 @@ class ActivePiece(Piece, DraggableSprite):
         self.board.pieces[self.board.get_tile_index(tile)] = self
         
         self.tile = tile
-        self.set_position(self.board.get_global_position(tile))
+        self.set_position(self.board.get_tile_position(tile))
         self.board.deselect()
 
     def select(self) -> None:
