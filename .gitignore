@@ -1,13 +1,3 @@
-__pycache__/ai.cpython-312.pyc
-__pycache__/board.cpython-312.pyc
-__pycache__/collider.cpython-312.pyc
-__pycache__/data.cpython-312.pyc
-__pycache__/game.cpython-312.pyc
-__pycache__/player.cpython-312.pyc
-__pycache__/settings.cpython-312.pyc
-__pycache__/window.cpython-312.pyc
-checkers/__pycache__/checkers_ais.cpython-312.pyc
-checkers/__pycache__/checkers_settings.cpython-312.pyc
-checkers/__pycache__/checkers.cpython-312.pyc
-othello/__pycache__/othello_settings.cpython-312.pyc
-othello/__pycache__/othello.cpython-312.pyc
+__pycache__/
+checkers/__pycache__/
+othello/__pycache__/
