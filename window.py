@@ -77,6 +77,8 @@ class Sprite(GameObject):
             eg: key_presses, mouse clicks ect.
         """
         self.hidden = hidden
+        if not hasattr(self, 'components'):
+            self.components = []
 
         self.children:list[Sprite] = []
         """the sprite who has this sprite as a parrent."""
@@ -156,6 +158,16 @@ class Sprite(GameObject):
          if self in Sprite.instances:
             Sprite.instances.remove(self)
          super().destroy()
+
+
+class Component(object):
+    """the parrent class of objects added to Sprites to add specific funinatity."""
+    
+    def __init__(self, sprite:Sprite):
+        """
+        `sprite`: the sprite `self` is aplied to.
+        """
+        self.sprite = sprite
 
 
 class Text(Sprite):

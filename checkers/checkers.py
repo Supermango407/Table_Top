@@ -11,7 +11,7 @@ from window import GameObject, Sprite, Button
 import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
-from board import ActiveBoard, ActivePiece, PieceMove
+from board import PieceMove, Piece, Board
 import collider
 
 
@@ -36,7 +36,7 @@ class Move(PieceMove):
     piece_jumping:CheckersPiece=None
 
 
-class CheckersPiece(ActivePiece):
+class CheckersPiece(Piece):
     """a piece for `Checkers` game."""
 
     def __init__(self, player:int, tile:Vector2, kinging_row:int):
@@ -48,11 +48,11 @@ class CheckersPiece(ActivePiece):
         super().__init__(
             tile=tile,
             color=checkers_settings.piece_colors[player],
-            collider=collider.CircleCollider(
-                position=Vector2(0, 0),
-                radius=0, # radiues will be when piece is placed on board.
-            ),
-            show_collider=True,
+            # collider=collider.CircleCollider(
+            #     position=Vector2(0, 0),
+            #     radius=0, # radiues will be when piece is placed on board.
+            # ),
+            # show_collider=True,
             outline_thickness=2
         )
         self.player = player
@@ -81,7 +81,7 @@ class CheckersPiece(ActivePiece):
 
     def place_on_board(self, board):
         super().place_on_board(board)
-        self.collider.radius = self.raduis
+        # self.collider.radius = self.raduis
 
     def get_tile_moves(self) -> Move:
         """gets valid moves for piece."""
@@ -155,7 +155,7 @@ class Checkers(Game):
     def __init__(self):
         super().__init__()
         self.table:Table = Table(turn=-1, pieces=[])
-        self.board = ActiveBoard(
+        self.board = Board(
             game_ref=self,
             tile_colors=checkers_settings.board['colors'],
             tile_size=checkers_settings.board['tile_size'],
