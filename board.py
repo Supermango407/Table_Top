@@ -98,12 +98,14 @@ class Board(Sprite):
         if self.tile_border_width != 0:
             x_pos_on = self.tile_size+self.global_position.x
             """the next vertical line drawn's x pos"""
+            
             for _ in range(1, self.tile_count[0]):
-                pygame.draw.rect(self.window, self.tile_border_color, (x_pos_on, self.position.y, self.tile_border_width, self.board_height))
+                pygame.draw.rect(self.window, self.tile_border_color, (x_pos_on, self.global_position.y, self.tile_border_width, self.board_height))
                 x_pos_on += self.tile_spacing
 
             y_pos_on = self.tile_size+self.global_position.y
             """the next horizantal line drawn's y pos"""
+            
             for _ in range(1, self.tile_count[1]):
                 pygame.draw.rect(self.window, self.tile_border_color, (self.global_position.x, y_pos_on, self.board_width, self.tile_border_width))
                 y_pos_on += self.tile_spacing

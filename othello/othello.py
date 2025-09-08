@@ -53,6 +53,7 @@ class Othello(Game):
     def __init__(self):
         super().__init__()
         self.board = Board(
+            self,
             tile_size=othello_settings.board['tile_size'],
             tile_border_width=othello_settings.board['border_width'],
             tile_colors=othello_settings.board['baground_color'],
