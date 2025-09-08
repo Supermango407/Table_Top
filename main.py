@@ -4,10 +4,10 @@ import time
 import os
 import settings
 from game import Game
-from othello.othello import Othello
-import othello.othello_ais as AI
-# from checkers.checkers import Checkers
-# import checkers.checkers_ais as AI
+# from othello.othello import Othello
+# import othello.othello_ais as AI
+from checkers.checkers import Checkers
+import checkers.checkers_ais as AI
 from window import GameObject, Sprite
 from board import Board
 from player import Player
@@ -18,7 +18,7 @@ def start() -> None:
     GameObject.set_window(window)
     GameObject.font = pygame.font.SysFont('Consolas', settings.font_size)
     
-    start_game(Othello)
+    start_game(Checkers)
 
 
 def update() -> None:
@@ -92,7 +92,7 @@ def start_game(game:Game):
 
 if __name__ == '__main__':
     # move window to second monitorf
-    # os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
+    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
 
     # initiate window
     pygame.init()

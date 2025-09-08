@@ -64,9 +64,9 @@ class Sprite(GameObject):
     """GameObjects that are drawn to the screen"""
     instances:list[Sprite] = []
 
-    def __init__(self, position:Vector2=Vector2(0, 0), anchor:str='top_left', parrent:Sprite=None, hidden=False, check_events:bool=False):
+    def __init__(self, local_position:Vector2=Vector2(0, 0), anchor:str='top_left', parrent:Sprite=None, hidden=False, check_events:bool=False):
         """
-        `position`: the location of the sprite onscreen.
+        `local_position`: the location of the sprite relitive its parrent.
         `anchor`: where the board is placed on the screen eg:
             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
         `parrent`: what object the sprite is placed relitive to.
@@ -83,7 +83,7 @@ class Sprite(GameObject):
         self.children:list[Sprite] = []
         """the sprite who has this sprite as a parrent."""
 
-        self.position:Vector2 = position
+        self.local_position:Vector2 = local_position
         self.anchor:str = anchor
 
         # needs a place holder value before setting it.
@@ -109,29 +109,29 @@ class Sprite(GameObject):
         Sprite.instances.remove(self)
         Sprite.instances.append(self)
 
-    def set_position(self, position:Vector2=None, anchor:str=None) -> None:
-        """sets the position of `self`, with relation to `anchor`."""
-        if position != None:
-            self.position = position
+    def set_position(self, local_position:Vector2=None, anchor:str=None) -> None:
+        """sets the local_position of `self`, with relation to `anchor`."""
+        if local_position != None:
+            self.local_position = local_position
 
         if anchor != None:
             self.anchor = anchor
             
         # set `x` base on `self.anchor` and `self.offset`
         if 'left' in self.anchor:
-            x = self.position.x
+            x = self.local_position.x
         elif 'right' in self.anchor:
-            x = self.position.x+self.parrent.get_width()-self.get_width()
+            x = self.local_position.x+self.parrent.get_width()-self.get_width()
         else:
-            x = self.position.x+self.parrent.get_width()//2-self.get_width()//2
+            x = self.local_position.x+self.parrent.get_width()//2-self.get_width()//2
             
         # set `y` base on `self.anchor`
         if 'top' in self.anchor:
-            y = self.position.y
+            y = self.local_position.y
         elif 'bottom' in self.anchor:
-            y = self.position.y+self.parrent.get_height()-self.get_height()
+            y = self.local_position.y+self.parrent.get_height()-self.get_height()
         else:
-            y = self.position.y+self.parrent.get_height()//2-self.get_height()//2
+            y = self.local_position.y+self.parrent.get_height()//2-self.get_height()//2
         
         self.global_position = self.parrent.global_position+Vector2(x, y)
 
@@ -189,7 +189,7 @@ class Text(Sprite):
         
         self.text = GameObject.font.render(self.value, True, color)
         
-        super().__init__(position=position, anchor=anchor, parrent=parrent)
+        super().__init__(local_position=position, anchor=anchor, parrent=parrent)
 
     def get_width(self):
         return self.text.get_rect()[2]
@@ -246,7 +246,7 @@ class Button(Sprite):
         self.bg_color = bg_color
         self.hover_bg_color = hover_bg_color
         
-        super().__init__(position=position, anchor=anchor, parrent=parrent, check_events=True)
+        super().__init__(local_position=position, anchor=anchor, parrent=parrent, check_events=True)
         
         self.text = Text(value=self.text_value, parrent=self, position=Vector2(0, 0), anchor='center', color=text_color)
         self.set_position()

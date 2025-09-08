@@ -9,12 +9,6 @@ from window import GameObject, Sprite
 from collider import Collider
 
 
-@dataclass
-class PieceMove:
-    piece:Piece
-    tile:Vector2
-
-
 class Board(Sprite):
     
     def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, parrent:Sprite=None, check_events:bool=False):
@@ -73,7 +67,7 @@ class Board(Sprite):
         self.tile_spacing = self.tile_size+self.tile_border_width
         """the spaceing between adjecent tiles"""
 
-        super().__init__(position=position, anchor=anchor, parrent=parrent, check_events=check_events)
+        super().__init__(local_position=position, anchor=anchor, parrent=parrent, check_events=check_events)
 
     def clear_board(self):
         """deletes all pieces on the board."""
@@ -194,6 +188,68 @@ class Board(Sprite):
         return Vector2(x, y)
 
 
+class Piece(Sprite):
+    """sprites that can be placed on boards, but only one per tile."""
+
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False, parrent:Sprite=None, check_events:bool=False):
+        """
+        `tile`: where on board piece is placed.
+        `color`: the color of the piece.
+        `outline_color`: the color of the piece's outline.
+            if left None there wont be an outline.
+        `outline_thickness`: the thickness of the piece's outline.
+            if `outline_color` is None it wont matter.
+        `hidden`: if true, sprite will not be drawn to screen.
+        `parrent`: what object the sprite is placed relitive to.
+            defaults to Window.
+            if not None the sprite wont be drawn, so it can be drawn in the parrents script.
+        `check_events`: if True will check events,
+            eg: key_presses, mouse clicks ect.
+        """
+        self.tile = tile
+        self.color = color
+        self.outline_color = outline_color
+        self.outline_thickness = outline_thickness
+        self.board = None
+
+        # position will be set when piece is placed but it needs a place holder.
+        # uses Sprite.__init__ instead of super().__init__ because
+        # super doesn't work with Active Piece double inheritance.
+        Sprite.__init__(self, local_position=Vector2(0, 0), hidden=hidden, parrent=parrent, check_events=check_events)
+
+    def place_on_board(self, board:Board):
+        """called when this piece is placed on a board."""
+        self.board = board
+        self.board.add_child(self)
+        self.raduis = self.board.tile_size*0.4
+        self.set_position(self.board.get_tile_position(self.tile))
+        
+    def draw(self):
+        if self.board != None:
+            # draw piece
+            pygame.draw.circle(
+                GameObject.window,
+                self.color,
+                self.global_position,
+                self.raduis,
+            )
+
+            # draw outline if it exsitst
+            if self.outline_color != None:
+                pygame.draw.circle(
+                    GameObject.window,
+                    self.outline_color,
+                    self.global_position,
+                    self.raduis,
+                    self.outline_thickness,
+                )
+        super().draw()
+
+    def destroy(self):
+        del(self.board.pieces[self.board.get_tile_index(self.tile)])
+        super().destroy()
+
+
 # class ActiveBoard(Board):
 
 #     def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255), parrent:Sprite=None):
@@ -231,68 +287,6 @@ class Board(Sprite):
 #         if self.piece_selected != None:
 #             self.piece_selected.deselect()
 #             self.piece_selected = None
-
-
-class Piece(Sprite):
-    """sprites that can be placed on boards, but only one per tile."""
-
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False, parrent:Sprite=None, check_events:bool=False):
-        """
-        `tile`: where on board piece is placed.
-        `color`: the color of the piece.
-        `outline_color`: the color of the piece's outline.
-            if left None there wont be an outline.
-        `outline_thickness`: the thickness of the piece's outline.
-            if `outline_color` is None it wont matter.
-        `hidden`: if true, sprite will not be drawn to screen.
-        `parrent`: what object the sprite is placed relitive to.
-            defaults to Window.
-            if not None the sprite wont be drawn, so it can be drawn in the parrents script.
-        `check_events`: if True will check events,
-            eg: key_presses, mouse clicks ect.
-        """
-        self.tile = tile
-        self.color = color
-        self.outline_color = outline_color
-        self.outline_thickness = outline_thickness
-        self.board = None
-
-        # position will be set when piece is placed but it needs a place holder.
-        # uses Sprite.__init__ instead of super().__init__ because
-        # super doesn't work with Active Piece double inheritance.
-        Sprite.__init__(self, position=Vector2(0, 0), hidden=hidden, parrent=parrent, check_events=check_events)
-
-    def place_on_board(self, board:Board):
-        """called when this piece is placed on a board."""
-        self.board = board
-        self.board.add_child(self)
-        self.raduis = self.board.tile_size*0.4
-        self.set_position(self.board.get_tile_position(self.tile))
-        
-    def draw(self):
-        if self.board != None:
-            # draw piece
-            pygame.draw.circle(
-                GameObject.window,
-                self.color,
-                self.global_position,
-                self.raduis,
-            )
-
-            # draw outline if it exsitst
-            if self.outline_color != None:
-                pygame.draw.circle(
-                    GameObject.window,
-                    self.outline_color,
-                    self.global_position,
-                    self.raduis,
-                    self.outline_thickness,
-                )
-        super().draw()
-
-    def destroy(self):
-        del(self.board.pieces[self.board.get_tile_index(self.tile)])
-        super().destroy()
 
 
 # class ActivePiece(Piece):

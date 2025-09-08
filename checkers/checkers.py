@@ -11,7 +11,7 @@ from window import GameObject, Sprite, Button
 import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
-from board import PieceMove, Piece, Board
+from board import Piece, Board
 import collider
 
 
@@ -31,7 +31,7 @@ class Table(Game_Table):
 
 
 @dataclass
-class Move(PieceMove):
+class Move():
     piece:CheckersPiece
     piece_jumping:CheckersPiece=None
 
@@ -58,6 +58,14 @@ class CheckersPiece(Piece):
         self.player = player
         self.kinging_row = kinging_row
         self.is_king = False
+        
+        self.collider = collider.CircleCollider(
+            Vector2(0, 0),
+            0,
+            lambda: print('test'),
+            draggable=True,
+            parrent=self
+        )
 
     def draw(self):
         super().draw()
@@ -81,7 +89,7 @@ class CheckersPiece(Piece):
 
     def place_on_board(self, board):
         super().place_on_board(board)
-        # self.collider.radius = self.raduis
+        self.collider.radius = self.raduis
 
     def get_tile_moves(self) -> Move:
         """gets valid moves for piece."""
@@ -165,17 +173,17 @@ class Checkers(Game):
             self.next_turn_button = Button(None, text_value='Next Turn', anchor='bottom', parrent=self)
             self.set_position()
     
-    def check_event(self, event):
-        if event.type == pygame.MOUSEBUTTONUP:
-            tile_clicked = self.board.get_tile_at(pygame.mouse.get_pos())
-            if tile_clicked != None: # clicked on board
-                # if piece is selected but not dragging
-                if self.board.piece_selected != None and not self.board.piece_selected.sprite_dragging:
-                    # if valid move than play move
-                    for move in self.board.piece_selected.get_tile_moves():
-                        if move.tile == tile_clicked:
-                            self.play_move(move)
-                            break
+    # def check_event(self, event):
+    #     if event.type == pygame.MOUSEBUTTONUP:
+    #         tile_clicked = self.board.get_tile_at(pygame.mouse.get_pos())
+    #         if tile_clicked != None: # clicked on board
+    #             # if piece is selected but not dragging
+    #             if self.board.piece_selected != None and not self.board.piece_selected.sprite_dragging:
+    #                 # if valid move than play move
+    #                 for move in self.board.piece_selected.get_tile_moves():
+    #                     if move.tile == tile_clicked:
+    #                         self.play_move(move)
+    #                         break
 
     def start_game(self, *players, save_record=False):
         self.set_board()
