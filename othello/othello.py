@@ -3,6 +3,7 @@ import spmg
 import time
 from pygame import Vector2
 from dataclasses import dataclass
+
 import sys
 sys.path.append('../table_top')
 import othello.othello_settings as othello_settings
@@ -131,7 +132,7 @@ class Othello(Game):
         """skips the turn of the current player."""
         self.next_turn(True)
 
-    def check_event(self, event):
+    def event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and not self.players[self.table.turn].is_ai:
                 tile_pos = self.board.get_tile_at(pygame.mouse.get_pos())

@@ -79,7 +79,7 @@ class Board(Gameobject):
         """the size of the tiles including the boarder"""
 
         # draw a rect with the scale and color of the board
-        pygame.draw.rect(self.window, self.tile_colors[0], (self.global_position.x, self.global_position.y, self.board_width, self.board_height))
+        pygame.draw.rect(self.window, self.tile_colors[0], (self.global_position().x, self.global_position().y, self.board_width, self.board_height))
 
         # add checkered pattern if there is than more one color
         if len(self.tile_colors) > 1:
@@ -90,18 +90,18 @@ class Board(Gameobject):
 
         # draw border if it exsist
         if self.tile_border_width != 0:
-            x_pos_on = self.tile_size+self.global_position.x
+            x_pos_on = self.tile_size+self.global_position().x
             """the next vertical line drawn's x pos"""
             
             for _ in range(1, self.tile_count[0]):
-                pygame.draw.rect(self.window, self.tile_border_color, (x_pos_on, self.global_position.y, self.tile_border_width, self.board_height))
+                pygame.draw.rect(self.window, self.tile_border_color, (x_pos_on, self.global_position().y, self.tile_border_width, self.board_height))
                 x_pos_on += self.tile_spacing
 
-            y_pos_on = self.tile_size+self.global_position.y
+            y_pos_on = self.tile_size+self.global_position().y
             """the next horizantal line drawn's y pos"""
             
             for _ in range(1, self.tile_count[1]):
-                pygame.draw.rect(self.window, self.tile_border_color, (self.global_position.x, y_pos_on, self.board_width, self.tile_border_width))
+                pygame.draw.rect(self.window, self.tile_border_color, (self.global_position().x, y_pos_on, self.board_width, self.tile_border_width))
                 y_pos_on += self.tile_spacing
 
         super().draw()
@@ -150,7 +150,7 @@ class Board(Gameobject):
 
     def get_tile_at(self, position:Vector2) -> Vector2:
         """returns tile at global `position` if it exists"""
-        position -= self.global_position
+        position -= self.global_position()
 
         # return None of not over board
         if min(position) < 0 or position.x > self.board_width or position.y > self.board_height:
@@ -220,7 +220,7 @@ class Piece(Gameobject):
     def place_on_board(self, board:Board):
         """called when this piece is placed on a board."""
         self.board = board
-        self.board.add_child(self)
+        # self.board.place_piece(self, self.position)
         self.raduis = self.board.tile_size*0.4
         self.set_position(self.board.get_tile_position(self.tile))
         
@@ -230,7 +230,7 @@ class Piece(Gameobject):
             pygame.draw.circle(
                 Gameobject.window,
                 self.color,
-                self.global_position,
+                self.global_position(),
                 self.raduis,
             )
 

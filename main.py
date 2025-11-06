@@ -20,7 +20,7 @@ def start() -> None:
     spmg.Gameobject.window = window
     spmg.Gameobject.font = pygame.font.SysFont('Consolas', settings.font_size)
 
-    # start_game(Othello)
+    start_game(Othello)
 
 
 def update() -> None:
