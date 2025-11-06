@@ -1,13 +1,14 @@
 import pygame
+import screeninfo
 import threading
 import time
 import os
 import settings
 from game import Game
-# from othello.othello import Othello
-# import othello.othello_ais as AI
-from checkers.checkers import Checkers
-import checkers.checkers_ais as AI
+from othello.othello import Othello
+import othello.othello_ais as AI
+# from checkers.checkers import Checkers
+# import checkers.checkers_ais as AI
 from window import GameObject, Sprite
 from board import Board
 from player import Player
@@ -18,7 +19,7 @@ def start() -> None:
     GameObject.set_window(window)
     GameObject.font = pygame.font.SysFont('Consolas', settings.font_size)
     
-    start_game(Checkers)
+    start_game(Othello)
 
 
 def update() -> None:
@@ -91,8 +92,9 @@ def start_game(game:Game):
 
 
 if __name__ == '__main__':
-    # move window to second monitorf
-    os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
+    # move window to second monitor if it exsits
+    if len(screeninfo.get_monitors()) == 2: # two monitors
+        os.environ['SDL_VIDEO_WINDOW_POS'] = "%d,%d" % (1400,75)
 
     # initiate window
     pygame.init()
@@ -101,6 +103,8 @@ if __name__ == '__main__':
     # Set global vars
     open_game:Game = None; """game currently playing"""
     window = pygame.display.set_mode(settings.window_size)
+
+
     clock = pygame.time.Clock()
     start()
 
