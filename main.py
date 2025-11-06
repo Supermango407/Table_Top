@@ -4,35 +4,37 @@ import threading
 import time
 import os
 import settings
+import spmg
 from game import Game
 from othello.othello import Othello
 import othello.othello_ais as AI
 # from checkers.checkers import Checkers
 # import checkers.checkers_ais as AI
-from window import GameObject, Sprite
+# from window import GameObject, Sprite
 from board import Board
 from player import Player
 
 
 def start() -> None:
     """called once when game starts up"""
-    GameObject.set_window(window)
-    GameObject.font = pygame.font.SysFont('Consolas', settings.font_size)
-    
-    start_game(Othello)
+    spmg.Gameobject.window = window
+    spmg.Gameobject.font = pygame.font.SysFont('Consolas', settings.font_size)
+
+    # start_game(Othello)
 
 
 def update() -> None:
     """called once per frame"""
     window.fill(settings.background_color)
     check_events()
+    spmg.Gameobject.static_update()
 
-    for gameobject in GameObject.instances:
+    for gameobject in spmg.Gameobject.gameobjects:
         gameobject.update()
 
-    for sprite in Sprite.instances:
-        if not sprite.hidden and not isinstance(sprite.parrent, Sprite):
-            sprite.draw()
+    for gameobject in spmg.Gameobject.gameobjects:
+        if not gameobject.hidden and not isinstance(gameobject.parrent, spmg.Gameobject):
+            gameobject.draw()
 
     pygame.display.update()
 
@@ -42,14 +44,10 @@ def check_events() -> None:
     global run
 
     for event in pygame.event.get():
+        spmg.Gameobject.static_event(event)
         if event.type == pygame.QUIT:
             run = False
-        elif event.type == pygame.MOUSEMOTION:
-            GameObject.mouse_pos = pygame.mouse.get_pos()
-
-        for gameobject in GameObject.event_handlers:
-            gameobject.check_event(event)
-
+        
 
 # TODO: add seperate show record function
 def start_game(game:Game):
@@ -106,6 +104,7 @@ if __name__ == '__main__':
 
 
     clock = pygame.time.Clock()
+    spmg.Gameobject.static_start()
     start()
 
     # main loop

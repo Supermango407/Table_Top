@@ -1,9 +1,11 @@
 import pygame
+import spmg
+from spmg_pygame.gameobject import Gameobject
+# from spmg import ui
 from pygame import Vector2
 from typing import Union
 from dataclasses import dataclass
 import data
-from window import GameObject, Sprite, Text
 from player import Player
 
 
@@ -27,7 +29,7 @@ class Game_Table(object):
     # TODO: add timer
 
 
-class Game(Sprite):
+class Game(spmg.Gameobject):
     """the Table_Top games class."""
     game_vars:GameVars = GameVars("GAME_PARENT_CLASS", 0)
 
@@ -48,11 +50,11 @@ class Game(Sprite):
         # if in middle of game or not
         self.game_running = False
         
-        super().__init__(check_events=True)
+        super().__init__(listen=True)
 
         # `turn_text`: text of the player whose turn it is
         if self.display_game:
-            self.turn_text = Text(
+            self.turn_text = spmg.ui.Text(
                 value="",
                 position=Vector2(0, 16),
                 anchor='top',
@@ -135,7 +137,7 @@ class Game(Sprite):
         if self.save_record:
             data.save_record(self.game_vars.name, self.players, winner, self.history)
         
-        if GameObject.window == None:
+        if spmg.Gameobject.window == None:
             self.destroy()
         # print('-'*80)
         # print(self.history)

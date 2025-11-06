@@ -1,12 +1,11 @@
 import pygame
-import threading
+import spmg
 import time
 from pygame import Vector2
 from dataclasses import dataclass
 import sys
 sys.path.append('../table_top')
 import othello.othello_settings as othello_settings
-from window import GameObject, Sprite
 import ai as AI
 from player import Player
 from game import Game, Game_Table, GameVars
@@ -103,7 +102,7 @@ class Othello(Game):
 
     def set_turn_color(self, player:int) -> None:
         """sets the color of Turn Text, if it exsits, to `player`'s color."""
-        if GameObject.window != None:
+        if spmg.Gameobject.window != None:
             self.turn_text.set_color(othello_settings.piece_colors[player])
 
     def valid_move(self, move:Move):
@@ -236,7 +235,7 @@ class Othello(Game):
 
     def set_winner_text(self, winner) -> None:
         super().set_winner_text(winner)
-        if GameObject.window != None:
+        if spmg.Gameobject.window != None:
             if type(winner) == int:
                 self.turn_text.set_color(othello_settings.piece_colors[winner])
             elif type(winner) == str:

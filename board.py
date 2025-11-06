@@ -1,17 +1,17 @@
 from __future__ import annotations
 import pygame
 from pygame import Vector2
+from spmg_pygame.gameobject import Gameobject
 from typing import Union
 from dataclasses import dataclass
 from game import Game
 from collections.abc import Callable
-from window import GameObject, Sprite
 from collider import Collider
 
 
-class Board(Sprite):
+class Board(Gameobject):
     
-    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, parrent:Sprite=None, check_events:bool=False):
+    def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count:tuple[int, int]=(8, 8), tile_size:int=64, tile_colors:Union[tuple[int, int, int], tuple[tuple[int, int, int]]]=((255, 255, 255), (0, 0, 0)), tile_border_width:int=0, tile_border_color:tuple[int, int, int]=None, parrent:Gameobject=None, listen:bool=False):
         """
         `position`: the location of the sprite onscreen.
         `anchor`: where the board is placed on the screen eg:
@@ -67,7 +67,7 @@ class Board(Sprite):
         self.tile_spacing = self.tile_size+self.tile_border_width
         """the spaceing between adjecent tiles"""
 
-        super().__init__(local_position=position, anchor=anchor, parrent=parrent, check_events=check_events)
+        super().__init__(position=position, parrent=parrent, listen=listen)
 
     def clear_board(self):
         """deletes all pieces on the board."""
@@ -188,10 +188,10 @@ class Board(Sprite):
         return Vector2(x, y)
 
 
-class Piece(Sprite):
+class Piece(Gameobject):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False, parrent:Sprite=None, check_events:bool=False):
+    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False, parrent:Gameobject=None, listen:bool=False):
         """
         `tile`: where on board piece is placed.
         `color`: the color of the piece.
@@ -215,7 +215,7 @@ class Piece(Sprite):
         # position will be set when piece is placed but it needs a place holder.
         # uses Sprite.__init__ instead of super().__init__ because
         # super doesn't work with Active Piece double inheritance.
-        Sprite.__init__(self, local_position=Vector2(0, 0), hidden=hidden, parrent=parrent, check_events=check_events)
+        Gameobject.__init__(self, position=Vector2(0, 0), hidden=hidden, parrent=parrent, listen=listen)
 
     def place_on_board(self, board:Board):
         """called when this piece is placed on a board."""
@@ -228,7 +228,7 @@ class Piece(Sprite):
         if self.board != None:
             # draw piece
             pygame.draw.circle(
-                GameObject.window,
+                Gameobject.window,
                 self.color,
                 self.global_position,
                 self.raduis,
@@ -237,7 +237,7 @@ class Piece(Sprite):
             # draw outline if it exsitst
             if self.outline_color != None:
                 pygame.draw.circle(
-                    GameObject.window,
+                    Gameobject.window,
                     self.outline_color,
                     self.global_position,
                     self.raduis,
