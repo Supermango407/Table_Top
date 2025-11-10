@@ -33,7 +33,7 @@ def update() -> None:
         gameobject.update()
 
     for gameobject in spmg.Gameobject.gameobjects:
-        if not gameobject.hidden and not isinstance(gameobject.parrent, spmg.Gameobject):
+        if not gameobject.hidden and not isinstance(gameobject.parent, spmg.Gameobject):
             gameobject.draw()
 
     pygame.display.update()

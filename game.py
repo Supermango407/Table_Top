@@ -34,13 +34,11 @@ class Game(spmg.Gameobject):
     game_vars:GameVars = GameVars("GAME_PARENT_CLASS", 0)
 
     def __init__(self, display_game:bool=True):
-        """
-        `display_game`: if True the game will be shown on the screen,
-            else it will be hidden, for processing.  
-        """
         self.players = []
         self.save_record = False
         self.display_game = display_game # TODO: implement fully. GameObject.window != None
+        """if True the game will be shown on the screen,
+        else it will be hidden, for processing."""
 
         # the current set up of the game
         self.table:Game_Table = Game_Table(turn=-1)
@@ -57,9 +55,10 @@ class Game(spmg.Gameobject):
             self.turn_text = spmg.ui.Text(
                 value="",
                 position=Vector2(0, 16),
-                anchor='top',
-                color=(255, 255, 255),
-                parrent=self
+                anchor=Vector2(0.5, 0),
+                relative_position=Vector2(0.5, 0),
+                bg_color=(255, 255, 255),
+                # parent=self
             )
         
     def start_game(self, *players:tuple[Player], save_record=False):
@@ -72,10 +71,10 @@ class Game(spmg.Gameobject):
         self.next_turn()
 
     def get_width(self):
-        return self.parrent.get_width()
+        return self.parent.get_width()
     
     def get_height(self):
-        return self.parrent.get_height()
+        return self.parent.get_height()
 
     def next_turn(self) -> None:
         """move to the next player."""
@@ -116,6 +115,7 @@ class Game(spmg.Gameobject):
     def set_turn_text(self, player:int) -> None:
         """set the text, of turn text, if it exsists, to the `player`s name."""
         if self.display_game:
+            pass
             self.turn_text.set_text(self.players[player].name)
 
     def valid_move(self, move=None) -> bool:
