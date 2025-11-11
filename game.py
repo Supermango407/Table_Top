@@ -11,7 +11,7 @@ from player import Player
 
 @dataclass
 class GameVars(object):
-    """the game varables for each game.
+    """dataclase of the game varables.
         `name`: the name of the game.
         `players`: how many players can play this game.
             use int if there only one option.
@@ -24,9 +24,15 @@ class GameVars(object):
 
 @dataclass
 class Game_Table(object):
-    """class with basic Game vars"""
+    """dataclass with basic Game vars"""
     turn:int
     # TODO: add timer
+
+
+@dataclass
+class Game_Move(object):
+    player:int
+    """the index of whos turn it is."""
 
 
 class Game(spmg.Gameobject):
@@ -70,12 +76,6 @@ class Game(spmg.Gameobject):
         self.history = ''
         self.next_turn()
 
-    def get_width(self):
-        return self.parent.get_width()
-    
-    def get_height(self):
-        return self.parent.get_height()
-
     def next_turn(self) -> None:
         """move to the next player."""
         self.table.turn = (self.table.turn+1)%len(self.players)
@@ -115,7 +115,6 @@ class Game(spmg.Gameobject):
     def set_turn_text(self, player:int) -> None:
         """set the text, of turn text, if it exsists, to the `player`s name."""
         if self.display_game:
-            pass
             self.turn_text.set_text(self.players[player].name)
 
     def valid_move(self, move=None) -> bool:
@@ -125,9 +124,9 @@ class Game(spmg.Gameobject):
     def set_winner_text(self, winner) -> None:
         """sets the turn_text, if it exsists, to the Winner of game."""
         if self.display_game:
-            if type(winner) == int:
+            if type(winner) == int: # player wins
                 self.turn_text.set_text(self.players[winner].name+" Wins")
-            elif type(winner) == str:
+            elif type(winner) == str: # tie
                 self.turn_text.set_text(winner)
 
     def end_game(self, winner) -> None:
@@ -137,17 +136,18 @@ class Game(spmg.Gameobject):
         if self.save_record:
             data.save_record(self.game_vars.name, self.players, winner, self.history)
         
-        if spmg.Gameobject.window == None:
+        if not self.display_game:
             self.destroy()
+        
         # print('-'*80)
         # print(self.history)
         # print('-'*80)
 
     def show_record(self, players:list[Player], record:str) -> None:
-        """showes what the board looks like if `record` it played."""
+        """shows what the end looks like if `record` is played."""
         pass
 
-    def show_game(self, players:list[Player], record:str) -> None:
+    def show_game(self, players:list[Player], record:str, time_between_moves:float=0.5) -> None:
         """shows `record` of game played one move at a time."""
         pass
 

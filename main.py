@@ -17,8 +17,7 @@ from player import Player
 
 def start() -> None:
     """called once when game starts up"""
-    spmg.Gameobject.window = window
-    spmg.Gameobject.font = pygame.font.SysFont('Consolas', settings.font_size)
+    spmg.Gameobject.static_start(window)
 
     start_game(Othello)
 
@@ -26,16 +25,8 @@ def start() -> None:
 def update() -> None:
     """called once per frame"""
     window.fill(settings.background_color)
-    check_events()
     spmg.Gameobject.static_update()
-
-    for gameobject in spmg.Gameobject.gameobjects:
-        gameobject.update()
-
-    for gameobject in spmg.Gameobject.gameobjects:
-        if not gameobject.hidden and not isinstance(gameobject.parent, spmg.Gameobject):
-            gameobject.draw()
-
+    check_events()
     pygame.display.update()
 
 
@@ -54,14 +45,14 @@ def start_game(game:Game):
     """starts `game`"""
     global open_game
     open_game = game()
-    seed = 9947
+    seed = 887 # wipeout
 
-    # ties
+    # othello ties
     # seed = 55
     # seed = 98
     # seed = 117
 
-    # unfilled boards
+    # othello unfilled boards
     # seed = 111
     # seed = 159
     # seed = 164
@@ -83,6 +74,8 @@ def start_game(game:Game):
     # game_record = "B34W44B53W33B41W26B17W19B20W49B11W62B18W37B52W3B54W8B25W21B22W60B38W43B40W39B45W55B31W23B16W46B13W5B48W12B0W30B57W24B50W10B32W51B29W42B59W58B4W2B6W56B9W1B61W14B15W7B63B47"
     # game_record = "B34W26B18W25B32W41B19W12B17W24B20W9B16W44B42W8B40W49B50W43B45W37B4W13B22W52B10W11B3W53B2W51B59W58B62W61B29W14B6W48B46W54B56W33B5W30B0W63B57W55B23W60B1W31B47W38B21W7B15W39"
     
+    # game_record = "B29W21B13W37B43W44B45W42B49"
+    
     # thread = threading.Thread(target=open_game.show_game, args=(players, game_record))
     # thread.start()
 
@@ -101,10 +94,8 @@ if __name__ == '__main__':
     # Set global vars
     open_game:Game = None; """game currently playing"""
     window = pygame.display.set_mode(settings.window_size)
-
-
     clock = pygame.time.Clock()
-    spmg.Gameobject.static_start()
+    
     start()
 
     # main loop
@@ -117,4 +108,6 @@ if __name__ == '__main__':
 
 
 # TODO:
-# set pygame.mouse.get_pos() to self.mouse_pos
+# menu
+# timer
+# logrithmic ranking

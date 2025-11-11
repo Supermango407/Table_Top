@@ -1,3 +1,4 @@
+from __future__ import annotations
 import pygame
 import spmg
 import time
@@ -9,27 +10,26 @@ sys.path.append('../table_top')
 import othello.othello_settings as othello_settings
 import ai as AI
 from player import Player
-from game import Game, Game_Table, GameVars
+from game import Game, Game_Table, GameVars, Game_Move
 from board import Board, Piece
 
 
 @dataclass
-class Table(Game_Table):
+class Othello_Table(Game_Table):
     """curent set up of board
         `turn`: whos turn it currently is.
         `pieces`: pieces on board.
     """
-    pieces:list[Piece]
+    pieces:list[OthelloPiece]
 
 
 @dataclass
-class Move(object):
+class Move(Game_Move):
     """a piece being placed by a player.
+        `player`: player placing `piece`.
         `tile`: where the piece is being placed.
-        `player`: player placeing `piece`.
     """
     tile:Vector2
-    player:int
 
 
 class OthelloPiece(Piece):
@@ -60,7 +60,7 @@ class Othello(Game):
             tile_border_color=othello_settings.board['border_color']
         )
 
-        self.table = Table(-1, [])
+        self.table:Othello_Table = Othello_Table(-1, [])
 
     def start_game(self, *players:tuple[Player], save_record=False):
         self.set_board()
@@ -137,7 +137,7 @@ class Othello(Game):
             if event.button == 1 and not self.players[self.table.turn].is_ai:
                 tile_pos = self.board.get_tile_at(pygame.mouse.get_pos())
                 if tile_pos != None:
-                    move = Move(tile_pos, self.table.turn)
+                    move = Move(self.table.turn, tile_pos)
                     if self.valid_move(move):
                         self.play_move(move)
         elif event.type == pygame.KEYUP:
@@ -151,7 +151,7 @@ class Othello(Game):
 
         # add the moves that are valid
         for tile in tiles:
-            move = Move(tile, self.table.turn)
+            move = Move(self.table.turn, tile)
 
             if self.valid_move(move):
                 self.moves.append(move)
@@ -173,7 +173,7 @@ class Othello(Game):
         piece = OthelloPiece(tile, player)
         self.board.place_piece(tile, piece)
         self.table.pieces.append(piece)
-        for piece in get_flip_pieces(Move(tile, player), self.table):
+        for piece in get_flip_pieces(Move(player, tile), self.table):
             piece.flip()
 
     def split_record(self, record:str) -> list[str]:
@@ -205,11 +205,12 @@ class Othello(Game):
         for move_string in moves:
             self.play_move_string(move_string)
 
-        # set `no_valid_moves` to True to make sure the game ends
+        # forces the game to end
+        # so get_winner isn't None
         self.no_valid_moves = True
-        self.set_winner_text(self.get_winner())
+        self.end_game(self.get_winner())
 
-    def show_game(self, players, record):
+    def show_game(self, players, record, time_between_moves=0.5):
         self.players = players
         moves = self.split_record(record)
         self.set_board()
@@ -218,14 +219,15 @@ class Othello(Game):
         self.set_turn_color(0)
         
         for move in moves:
-            time.sleep(0.1)
+            time.sleep(time_between_moves)
             self.set_turn_text(self.table.turn)
             self.set_turn_color(self.table.turn)
             self.play_move_string(move)
         
-        # set `no_valid_moves` to True to make sure the game ends
+        # forces the game to end
+        # so get_winner isn't None
         self.no_valid_moves = True
-        self.set_winner_text(self.get_winner())
+        self.end_game(self.get_winner())
 
     def play_move_string(self, move_string:str) -> None:
         """playes move based off `move_string`"""
@@ -243,7 +245,7 @@ class Othello(Game):
                 self.turn_text.set_color(othello_settings.tie_color)
 
 
-def valid_move(move:Move, table:Table) -> bool:
+def valid_move(move:Move, table:Othello_Table) -> bool:
     """whether making `move` on `table` is a valid move."""
     # isn't valid if a piece is already there
     if get_piece_at(move.tile, table) != None:
@@ -258,7 +260,7 @@ def valid_move(move:Move, table:Table) -> bool:
     return True
 
 
-def get_piece_at(tile:Vector2, table:Table) -> Piece:
+def get_piece_at(tile:Vector2, table:Othello_Table) -> Piece:
     """returns piece on table, at `tile`, if it exsists."""
     for piece in table.pieces:
         if piece.tile == tile:
@@ -267,7 +269,7 @@ def get_piece_at(tile:Vector2, table:Table) -> Piece:
     return None
 
 
-def get_flip_pieces(move:Move, table:Table) -> list[Piece]:
+def get_flip_pieces(move:Move, table:Othello_Table) -> list[Piece]:
         """reutrns a list of pieces that will flip if a peice is placed at `position`"""
         pieces = [] # the reutrn value
         
