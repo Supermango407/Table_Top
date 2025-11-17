@@ -2,6 +2,8 @@ from __future__ import annotations
 import pygame
 from pygame import Vector2
 from spmg_pygame.gameobject import Gameobject
+from spmg_pygame.collider import Collider, CircleCollider
+from spmg_pygame.draggable import draggable
 from typing import Union, Type
 from dataclasses import dataclass
 from game import Game, GameTable
@@ -256,13 +258,30 @@ class ActiveGameTable(GameTable):
     """pieces on board."""
 
 
+@draggable
 class ActivePiece(Piece):
     """a piece that can move for tile to tile."""
 
     def __init__(self, player:int, **kwargs):
         self.player:int = player
         """the index of thr player whos piece it is."""
+        self.selected:bool = False
+        """whether the piece is selected or not."""
         super().__init__(**kwargs)
+
+        if not hasattr(self, "collider"):
+            self.collider:Collider = CircleCollider(
+                radius=10,
+                hidden=False,
+                on_click=lambda: print('test'),
+                parent=self
+            )
+            """the collider of the Piece."""
+
+    def draw(self):
+        if self.selected:
+            pygame.draw.circle(self.window, "light gray", self.global_position, self.board.tile_size//2)
+        return super().draw()
 
     def get_tile_moves(self) -> list[Vector2]:
         """gets a list of all tiles."""
@@ -285,9 +304,28 @@ class ActiveBoardGame(Game):
             """the type of `ActivePiece` the board game uses."""
         if not hasattr(self, "table"):
             self.table:ActivePiece = ActivePiece(turn=-1, pieces=[])
+        
+        self.piece_selected:ActivePiece = None
+        """the current piece selected."""
 
         super().__init__(**kwargs)
     
+    def event(self, event):
+        if event.type == pygame.MOUSEBUTTONUP:
+            tile = self.board.get_tile_at(self.mouse_pos)
+            if tile != None:
+                self.tile_clicked(tile)
+
+    def tile_clicked(self, tile:Vector2) -> None:
+        """called when tile is clicked."""
+        piece_at = self.board.get_piece_on(tile)
+        if self.piece_selected != None:
+            self.piece_selected.selected = False
+
+        if piece_at != None:
+            self.piece_selected = piece_at
+            self.piece_selected.selected = True
+
     def start_game(self, *players, save_record=False):
         self.set_board()
         super().start_game(*players, save_record=save_record)

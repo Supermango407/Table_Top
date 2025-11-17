@@ -40,15 +40,6 @@ class CheckersPiece(ActivePiece):
         )
         self.is_king = False
         """whether the piece has been kinged or not."""
-        
-        self.collider = collider.CircleCollider(
-            Vector2(0, 0),
-            0,
-            lambda: print('test'),
-            draggable=True,
-            parrent=self
-        )
-        """the collider of the piece."""
 
     def draw(self):
         super().draw()
@@ -154,18 +145,6 @@ class Checkers(ActiveBoardGame):
         super().__init__()
 
         self.start()
-    
-    # def check_event(self, event):
-    #     if event.type == pygame.MOUSEBUTTONUP:
-    #         tile_clicked = self.board.get_tile_at(pygame.mouse.get_pos())
-    #         if tile_clicked != None: # clicked on board
-    #             # if piece is selected but not dragging
-    #             if self.board.piece_selected != None and not self.board.piece_selected.sprite_dragging:
-    #                 # if valid move than play move
-    #                 for move in self.board.piece_selected.get_tile_moves():
-    #                     if move.tile == tile_clicked:
-    #                         self.play_move(move)
-    #                         break
 
     def start_game(self, *players, save_record=False):
         self.table.piece_jumping = None
@@ -232,13 +211,3 @@ class Checkers(ActiveBoardGame):
         self.place_piece(1, Vector2(3, 2))
         self.place_piece(1, Vector2(5, 2))
         self.place_piece(1, Vector2(7, 2))
-
-    # def place_piece(self, player:int, tile:Vector2, king_row:int):
-    #     """places piece on board at `tile`"""
-    #     piece = CheckersPiece(player, king_row)
-    #     self.board.place_piece(tile, piece)
-    #     self.table.pieces.append(piece)
-
-    def click_test(self):
-        print(self)
-
