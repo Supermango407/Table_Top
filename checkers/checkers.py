@@ -9,8 +9,8 @@ sys.path.append('../table_top')
 import checkers.checkers_settings as checkers_settings
 import ai as AI
 from player import Player
-from game import GameVars, GameMove
-from board import ActiveBoardGame, ActivePiece, ActiveGameTable, Board
+from game import GameVars
+from board import ActiveBoardGame, ActiveGameMove, ActivePiece, ActiveGameTable, Board
 import collider
 
 
@@ -23,8 +23,7 @@ class Table(ActiveGameTable):
 
 
 @dataclass
-class Move(GameMove):
-    piece:CheckersPiece
+class Move(ActiveGameMove):
     piece_jumping:CheckersPiece=None
 
 
@@ -65,14 +64,18 @@ class CheckersPiece(ActivePiece):
         super().place_on_board(board, tile)
         self.collider.radius = self.raduis
 
-    def get_tile_moves(self) -> Move:
+    def get_tile_moves(self) -> list[Move]:
         """gets valid moves for piece."""
+        # return an empty list if piece is not on board
+        if self.board == None:
+            return []
+        
         moves:list[Move] = []
         tile_offsets:list[Vector2] = []
 
         # if not pieces turn than there are no valid moves
-        if self.player != self.board.game_ref.table.turn:
-            return []
+        # if self.player != self.board.game_ref.table.turn:
+        #     return []
 
         # if a piece was just jumped
         piece_jumping:CheckersPiece = self.board.game_ref.table.piece_jumping
@@ -96,7 +99,7 @@ class CheckersPiece(ActivePiece):
         
         # filter through the invalid moves
         for tile_offset in tile_offsets:
-            tile = self.tile + tile_offset
+            tile = self.tile_on + tile_offset
 
             # skip tile if it is not on the board.
             if not self.board.tile_on_board(tile):
@@ -109,16 +112,16 @@ class CheckersPiece(ActivePiece):
                     continue
 
                 # if enemy piece is on tile then check the tile behind it.
-                tile_behind_piece = tile_offset*2 + self.tile
+                tile_behind_piece = tile_offset*2 + self.tile_on
                 # if the tile is on the board and no piece is on it,
                 # then you can jump over the enemy piece, and should added
                 # the tile behind the enemy piece to tiles
                 if self.board.tile_on_board(tile_behind_piece) and self.board.get_piece_on(tile_behind_piece) == None:
-                    moves.append(Move(self, tile_behind_piece, piece_on_tile))
+                    moves.append(Move(self.player, self, tile_behind_piece, piece_on_tile))
             else:
                 # tile empty. if didn't just jump than add move to list
                 if piece_jumping == None:
-                    moves.append(Move(self, tile))
+                    moves.append(Move(self.player, self, tile))
         
         return moves
 
@@ -192,10 +195,10 @@ class Checkers(ActiveBoardGame):
         self.place_piece(0, Vector2(6, 7))
         self.place_piece(0, Vector2(1, 6))
         self.place_piece(0, Vector2(3, 6))
-        self.place_piece(0, Vector2(5, 6))
+        self.place_piece(0, Vector2(5, 4)) # 5, 6
         self.place_piece(0, Vector2(7, 6))
         self.place_piece(0, Vector2(0, 5))
-        self.place_piece(0, Vector2(2, 5))
+        self.place_piece(0, Vector2(3, 4)) # 2, 5
         self.place_piece(0, Vector2(4, 5))
         self.place_piece(0, Vector2(6, 5))
 
@@ -203,11 +206,11 @@ class Checkers(ActiveBoardGame):
         self.place_piece(1, Vector2(3, 0))
         self.place_piece(1, Vector2(5, 0))
         self.place_piece(1, Vector2(7, 0))
-        self.place_piece(1, Vector2(0, 1))
-        self.place_piece(1, Vector2(2, 1))
+        self.place_piece(1, Vector2(0, 3)) # 0, 1
+        self.place_piece(1, Vector2(2, 3)) # 2, 1
         self.place_piece(1, Vector2(4, 1))
         self.place_piece(1, Vector2(6, 1))
         self.place_piece(1, Vector2(1, 2))
         self.place_piece(1, Vector2(3, 2))
-        self.place_piece(1, Vector2(5, 2))
+        self.place_piece(1, Vector2(4, 3)) # 5, 2
         self.place_piece(1, Vector2(7, 2))
