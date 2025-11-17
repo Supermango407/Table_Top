@@ -2,9 +2,9 @@ from __future__ import annotations
 import pygame
 from pygame import Vector2
 from spmg_pygame.gameobject import Gameobject
-from typing import Union
+from typing import Union, Type
 from dataclasses import dataclass
-from game import Game
+from game import Game, GameTable
 from collections.abc import Callable
 from collider import Collider
 
@@ -129,7 +129,7 @@ class Board(Gameobject):
             returns True if successful, else returns False."""
         tile_index = self.get_tile_index(tile)
 
-        # if there's' alread a piece there, return False
+        # if there's' already a piece there, return False
         # else place Peice and return True
         if self.pieces.get(tile_index):
             return False
@@ -137,7 +137,7 @@ class Board(Gameobject):
         if piece == None:
             self.pieces[tile_index] = Piece(tile, self, piece_color)
         else:
-            piece.place_on_board(self)
+            piece.place_on_board(self, tile)
             self.pieces[tile_index] = piece
 
         return True
@@ -189,38 +189,36 @@ class Board(Gameobject):
 class Piece(Gameobject):
     """sprites that can be placed on boards, but only one per tile."""
 
-    def __init__(self, tile:Vector2, color:tuple[int, int, int], outline_color:tuple[int, int, int]=None, outline_thickness:int=1, hidden=False, parent:Gameobject=None, listen:bool=False):
-        """
-        `tile`: where on board piece is placed.
-        `color`: the color of the piece.
-        `outline_color`: the color of the piece's outline.
-            if left None there wont be an outline.
-        `outline_thickness`: the thickness of the piece's outline.
-            if `outline_color` is None it wont matter.
-        `hidden`: if true, sprite will not be drawn to screen.
-        `parent`: what object the sprite is placed relitive to.
-            defaults to Window.
-            if not None the sprite wont be drawn, so it can be drawn in the parents script.
-        `check_events`: if True will check events,
-            eg: key_presses, mouse clicks ect.
-        """
-        self.tile = tile
-        self.color = color
-        self.outline_color = outline_color
-        self.outline_thickness = outline_thickness
-        self.board = None
+    def __init__(self,
+    color:tuple[int, int, int],
+    outline_color:tuple[int, int, int]=None,
+    outline_thickness:int=1,
+    **kwargs
+    ):
+        self.color:tuple[int, int, int] = color
+        """the color of the piece."""
+        self.outline_color:tuple[int, int, int] = outline_color
+        """the color of the piece's outline.
+        if left None there wont be an outline."""
+        self.outline_thickness:int = outline_thickness
+        """the thickness of the piece's outline.
+            if `outline_color` is None it wont matter."""
+        self.board:Board = None
+        """the board the piece is placed on."""
+        self.tile:Vector2 = None
+        """where on board piece is placed."""
 
         # position will be set when piece is placed but it needs a place holder.
         # uses Sprite.__init__ instead of super().__init__ because
         # super doesn't work with Active Piece double inheritance.
-        Gameobject.__init__(self, position=Vector2(0, 0), hidden=hidden, parent=parent, listen=listen)
+        Gameobject.__init__(self, position=Vector2(0, 0), **kwargs)
 
-    def place_on_board(self, board:Board):
+    def place_on_board(self, board:Board, tile:Vector2):
         """called when this piece is placed on a board."""
         self.board = board
         # self.board.place_piece(self, self.position)
         self.raduis = self.board.tile_size*0.4
-        self.set_position(self.board.get_tile_global_position(self.tile))
+        self.set_position(self.board.get_tile_global_position(tile))
         
     def draw(self):
         if self.board != None:
@@ -248,143 +246,60 @@ class Piece(Gameobject):
         super().destroy()
 
 
-# class ActiveBoard(Board):
+# Active Games
+# --------------------------------------------------------------------------------
 
-#     def __init__(self, game_ref:Game, position:Vector2=Vector2(0, 0), anchor:str='center', tile_count=(8, 8), tile_size=64, tile_colors=((255, 255, 255), (0, 0, 0)), tile_border_width=0, tile_border_color=None, move_color:tuple[int, int, int]=(127, 0, 255), parent:Sprite=None):
-#         """
-#         `position`: the location of the sprite onscreen.
-#         `anchor`: where the board is placed on the screen eg:
-#             top_left, top, top_right, left, center, right, bottom_left, bottom, bottom_right.
-#         `game_ref`: a reference to the game the board is apart of.
-#         `tile_count`: the number of tiles in the format (x, y)
-#         `tile_size`: the size of tiles
-#         `tile_colors`: the color of the tiles
-#             if two colors are given colors will be used in checkered pattern
-#         `tile_border_width`: the width of the border between tiles
-#         `tile_border_color`: the color of the border between tiles
-#             if no color give will default to be an offset of the first index of `tile_colors`
-#         `move_color`: the color of the avalible move dots.
-#         `parent`: what object the sprite is placed relitive to.
-#             defaults to Window.
-#             if not None the sprite wont be drawn, so it can be drawn in the parents script.
-#         """
-#         super().__init__(game_ref=game_ref, position=position, anchor=anchor, tile_count=tile_count, tile_size=tile_size, tile_colors=tile_colors, tile_border_width=tile_border_width, tile_border_color=tile_border_color, check_events=True)
-#         self.move_color = move_color
+@dataclass
+class ActiveGameTable(GameTable):
+    """base class of a table for ActiveBoardGames."""
+    pieces:list[ActivePiece]
+    """pieces on board."""
 
-#         # piece selected keeps track of last piece click
-#         # for games with active pieces (like chess and checkers).
-#         # it normaly shows the valid moves for said piece.
-#         self.piece_selected:ActivePiece = None
+
+class ActivePiece(Piece):
+    """a piece that can move for tile to tile."""
+
+    def __init__(self, player:int, **kwargs):
+        self.player:int = player
+        """the index of thr player whos piece it is."""
+        super().__init__(**kwargs)
+
+    def get_tile_moves(self) -> list[Vector2]:
+        """gets a list of all tiles."""
+        # return an empty list if piece is not on board
+        if self.board == None:
+            return []
+        
+        return []
+
+
+class ActiveBoardGame(Game):
+    """board game where the player moves the pieces."""
+
+    def __init__(self, **kwargs):
+        if not hasattr(self, "board"):
+            self.board:Board = None
+            """the board the game is played on."""
+        if not hasattr(self, "piece_type"):
+            self.piece_type:Type[ActivePiece] = ActivePiece
+            """the type of `ActivePiece` the board game uses."""
+        if not hasattr(self, "table"):
+            self.table:ActivePiece = ActivePiece(turn=-1, pieces=[])
+
+        super().__init__(**kwargs)
     
-#     def check_event(self, event):
-#         if event.type == pygame.MOUSEBUTTONUP:
-#             self.deselect()
+    def start_game(self, *players, save_record=False):
+        self.set_board()
+        super().start_game(*players, save_record=save_record)
 
-#     def deselect(self) -> None:
-#         """deselects selected piece if one exsists."""
-#         if self.piece_selected != None:
-#             self.piece_selected.deselect()
-#             self.piece_selected = None
-
-
-# class ActivePiece(Piece):
-#     """a Piece that has moves, and can usally be dragged around."""
-
-#     def __init__(self, tile:Vector2, color:tuple[int, int, int], collider:Collider, selected_outline_color:tuple[int,int,int]=(255, 255, 63), outline_color:tuple[int, int, int]=(None), outline_thickness:int=1, locked:bool=False, show_collider:bool=False, hidden=False, parent:Sprite=None):
-#         """
-#         `tile`: where on board piece is placed.
-#         `color`: the color of the piece.
-#         `collider`: the collider of the sprite.
-#         `selected_outline_color`: the oultile color of the sprite when selected.
-#         `outline_color`: the color of the piece's outline.
-#             if left None there wont be an outline.
-#         `outline_thickness`: the thickness of the piece's outline.
-#             if `outline_color` is None it wont matter.
-#         `locked`: if true, piece isn't selectable.
-#         `show_collider`: if true will display the collider
-#         `hidden`: if true, sprite will not be drawn to screen.
-#         `parent`: what object the sprite is placed relitive to.
-#             defaults to Window.
-#             if not None the sprite wont be drawn, so it can be drawn in the parents script.
-#         """
+    def set_board(self):
+        """puts the pieces in there starting position."""
+        self.board.clear_board()
         
-#         super().__init__(
-#             self,
-#             tile=tile,
-#             color=color,
-#             outline_color=outline_color,
-#             outline_thickness=outline_thickness,
-#             hidden=hidden,
-#             parent=parent
-#         )
-        
-#         self.board:ActiveBoard = None
-#         self.selected_outline_color = selected_outline_color
+    def place_piece(self, player:int, tile:Vector2):
+        """places piece on board at `tile`"""
+        piece = self.piece_type(player)
+        self.board.place_piece(tile, piece)
+        self.table.pieces.append(piece)
 
-#         # the color of the pieces outline when not selected
-#         self.main_outline_color = outline_color
-
-#         # if this piece is currently selected by board.
-#         self.selected = False
-
-#     def draw(self):
-#         super().draw()
-
-#         # if piece selected show valid move dots
-#         if self.selected:
-#             tile_moves = self.get_tile_moves()
-#             for tile_move in tile_moves:
-#                 pygame.draw.circle(
-#                     self.window,
-#                     self.board.move_color,
-#                     self.board.get_tile_position(tile_move.tile),
-#                     self.board.tile_size//8
-#                 )
-
-#     def move_piece(self, tile:Vector2) -> None:
-#         """moves self to a tile on `board`."""
-#         # update board pieces list
-#         del(self.board.pieces[self.board.get_tile_index(self.tile)])
-#         self.board.pieces[self.board.get_tile_index(tile)] = self
-        
-#         self.tile = tile
-#         self.set_position(self.board.get_tile_position(tile))
-#         self.board.deselect()
-
-#     def select(self) -> None:
-#         """sets `self` as selected piece."""
-#         # cant select if piece is locked
-#         if self.locked:
-#             return
-        
-#         self.board.piece_selected = self
-#         self.outline_color = self.selected_outline_color
-#         self.selected = True
-
-#     def deselect(self):
-#         """deselects self and removes it from boards selected."""
-#         self.selected = False
-#         self.board.piece_selected = None
-#         self.outline_color = self.main_outline_color
-
-#     def get_tile_moves(self) -> list[PieceMove]:
-#         """gets a list of tiles the piece can move to."""
-#         return []
-
-#     def onlifted(self, sprite_start, sprite_end):
-#         super().onlifted(sprite_start, sprite_end)
-#         if self.board.get_tile_at(sprite_start.copy()) == self.board.get_tile_at(sprite_end.copy()):
-#             self.set_position(sprite_start.copy())
-#             self.select()
-#         else:
-#             tile_over = self.board.get_tile_at(sprite_end)
-#             if tile_over != None:
-#                 # check to see if piece is over a valid tile
-#                 for move in self.get_tile_moves():
-#                     if move.tile == tile_over:
-#                         self.board.game_ref.play_move(move=move)
-#                         break
-#                 # if not a valid tile, move back to starting spot
-#                 else:
-#                     self.set_position(sprite_start.copy())
-
+# --------------------------------------------------------------------------------

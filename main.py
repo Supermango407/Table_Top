@@ -6,10 +6,10 @@ import os
 import settings
 import spmg
 from game import Game
-from othello.othello import Othello
-import othello.othello_ais as AI
-# from checkers.checkers import Checkers
-# import checkers.checkers_ais as AI
+# from othello.othello import Othello
+# import othello.othello_ais as AI
+from checkers.checkers import Checkers
+import checkers.checkers_ais as AI
 # from window import GameObject, Sprite
 from board import Board
 from player import Player
@@ -19,7 +19,7 @@ def start() -> None:
     """called once when game starts up"""
     spmg.Gameobject.static_start(window)
 
-    start_game(Othello)
+    start_game(Checkers)
 
 
 def update() -> None:

@@ -10,12 +10,12 @@ sys.path.append('../table_top')
 import othello.othello_settings as othello_settings
 import ai as AI
 from player import Player
-from game import Game, Game_Table, GameVars, Game_Move
+from game import Game, GameTable, GameVars, GameMove
 from board import Board, Piece
 
 
 @dataclass
-class Othello_Table(Game_Table):
+class Othello_Table(GameTable):
     """curent set up of board
         `turn`: whos turn it currently is.
         `pieces`: pieces on board.
@@ -24,7 +24,7 @@ class Othello_Table(Game_Table):
 
 
 @dataclass
-class Move(Game_Move):
+class Move(GameMove):
     """a piece being placed by a player.
         `player`: player placing `piece`.
         `tile`: where the piece is being placed.

@@ -18,19 +18,22 @@ class GameVars(object):
             use tuple if there are multiple options.
     """
     name:str
+    """the name of the Game"""
     players:Union[int, tuple[int]]
+    """the number of players that can play the game"""
     # TODO: add image var
 
 
 @dataclass
-class Game_Table(object):
+class GameTable(object):
     """dataclass with basic Game vars"""
     turn:int
+    """who's turn it is"""
     # TODO: add timer
 
 
 @dataclass
-class Game_Move(object):
+class GameMove(object):
     player:int
     """the index of whos turn it is."""
 
@@ -46,13 +49,15 @@ class Game(spmg.Gameobject):
         """if True the game will be shown on the screen,
         else it will be hidden, for processing."""
 
-        # the current set up of the game
-        self.table:Game_Table = Game_Table(turn=-1)
-        # record of game played
-        self.history = ""
+        if not hasattr(self, "table"):
+            self.table:GameTable = GameTable(turn=-1)
+            """the current set up of the game"""
 
-        # if in middle of game or not
+        self.history = ""
+        """record of moves played"""
+
         self.game_running = False
+        """if in middle of game or not"""
         
         super().__init__(listen=True)
 
