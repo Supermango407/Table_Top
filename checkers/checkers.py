@@ -30,8 +30,9 @@ class Move(ActiveGameMove):
 class CheckersPiece(ActivePiece):
     """a piece for `Checkers` game."""
 
-    def __init__(self, player:int, **kwargs):
+    def __init__(self, game_ref:Checkers, player:int, **kwargs):
         super().__init__(
+            game_ref=game_ref,
             color=checkers_settings.piece_colors[player],
             player=player,
             outline_thickness=2,
@@ -144,6 +145,7 @@ class Checkers(ActiveBoardGame):
             tile_size=checkers_settings.board['tile_size'],
         )
         self.piece_type = CheckersPiece
+        self.move_type = Move
         self.table:Table = Table(turn=-1, pieces=[])
         super().__init__()
 
@@ -155,7 +157,7 @@ class Checkers(ActiveBoardGame):
         super().start_game(*players, save_record=save_record)
 
     def play_move(self, move:Move):
-        move.piece.move_piece(move.tile)
+        move.piece.move_to_tile(move.move_to)
         self.auto_next_turn=True
         
         # if jumping a piece
@@ -164,13 +166,14 @@ class Checkers(ActiveBoardGame):
 
             # set piece_jumping to the piece thats jumping,
             # so that that is the only piece that can jump again.
-            self.table.piece_jumping = move.piece
+            # self.table.piece_jumping = move.piece
             
             # set auto_next_turn to false
             self.auto_next_turn=False
 
         # if selected piece on kinging row than promote the piece
-        if not move.piece.is_king and move.piece.tile[1] == move.piece.kinging_row:
+        kinging_row:int = 0 if move.piece.player == 1 else 7
+        if not move.piece.is_king and move.piece.tile_on[1] == kinging_row:
             move.piece.promote()
         
         super().play_move(auto_next_turn=self.auto_next_turn)

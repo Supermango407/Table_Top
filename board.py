@@ -137,7 +137,7 @@ class Board(Gameobject):
             return False
         
         if piece == None:
-            self.pieces[tile_index] = Piece(tile, self, piece_color)
+            self.pieces[tile_index] = Piece(self.game_ref, tile, self, piece_color)
         else:
             piece.place_on_board(self, tile)
             self.pieces[tile_index] = piece
@@ -192,11 +192,14 @@ class Piece(Gameobject):
     """sprites that can be placed on boards, but only one per tile."""
 
     def __init__(self,
+    game_ref:Game,
     color:tuple[int, int, int],
     outline_color:tuple[int, int, int]=None,
     outline_thickness:int=1,
     **kwargs
     ):
+        self.game_ref:Game = game_ref
+        """a reference to the game the board is apart of."""
         self.color:tuple[int, int, int] = color
         """the color of the piece."""
         self.outline_color:tuple[int, int, int] = outline_color
@@ -224,6 +227,12 @@ class Piece(Gameobject):
         
     def move_to_tile(self, tile:Vector2):
         """move the piece to `tile`."""
+        # remove piece from current index
+        if self.tile_on != None:
+            self.board.pieces.pop(self.board.get_tile_index(self.tile_on))
+        # add piece to new index
+        self.board.pieces[self.board.get_tile_index(tile)] = self
+        
         self.tile_on = tile
         self.set_position(self.board.get_tile_global_position(tile))
 
@@ -249,7 +258,7 @@ class Piece(Gameobject):
         super().draw()
 
     def destroy(self):
-        del(self.board.pieces[self.board.get_tile_index(self.tile)])
+        del(self.board.pieces[self.board.get_tile_index(self.tile_on)])
         super().destroy()
 
 
@@ -275,14 +284,14 @@ class ActiveGameMove(GameMove):
 class ActivePiece(Piece):
     """a piece that can move for tile to tile."""
 
-    def __init__(self, player:int, **kwargs):
+    def __init__(self, game_ref:ActiveBoardGame, player:int, **kwargs):
         self.player:int = player
         """the index of thr player whos piece it is."""
         self.selected:bool = False
         """whether the piece is selected or not."""
         self.tile_on:Vector2 = None
         """the tile the piece is on."""
-        super().__init__(**kwargs)
+        super().__init__(game_ref, **kwargs)
 
         if not hasattr(self, "collider"):
             self.collider:Collider = CircleCollider(
@@ -294,7 +303,9 @@ class ActivePiece(Piece):
 
     def stopped_dragging(self, start:Vector2, end:Vector2):
         """called when piece is clicked."""
-        print(start, end)
+        # try move, and move back if failed
+        if not self.game_ref.try_move(self, self.board.get_tile_at(end)):
+            self.set_position(start)
 
     def draw(self):
         if self.selected:
@@ -319,6 +330,9 @@ class ActiveBoardGame(Game):
         if not hasattr(self, "piece_type"):
             self.piece_type:Type[ActivePiece] = ActivePiece
             """the type of `ActivePiece` the board game uses."""
+        if not hasattr(self, "piece_type"):
+            self.move_type:Type[ActiveGameMove] = ActiveGameMove
+            """the type of `ActiveGameMove` the board game uses."""
         if not hasattr(self, "table"):
             self.table:ActivePiece = ActivePiece(turn=-1, pieces=[])
         
@@ -346,14 +360,24 @@ class ActiveBoardGame(Game):
     def tile_clicked(self, tile:Vector2) -> None:
         """called when tile is clicked."""
         piece_at = self.board.get_piece_on(tile)
-        self.deselect_piece()
-
-        if piece_at != None:
+        if self.piece_selected != None:
+            self.try_move(self.piece_selected, tile)
+            self.deselect_piece()
+        elif piece_at != None:
             self.select_piece(piece_at)
 
     def start_game(self, *players, save_record=False):
         self.set_board()
         super().start_game(*players, save_record=save_record)
+
+    def try_move(self, piece:ActivePiece, tile:Vector2) -> bool:
+        """attemps to move `piece` to `tile`.
+        returns True if successful."""
+        for move in piece.get_tile_moves():
+            if move.move_to == tile:
+                self.play_move(move)
+                return True
+        return False
 
     def set_board(self):
         """puts the pieces in there starting position."""
@@ -361,12 +385,13 @@ class ActiveBoardGame(Game):
         
     def place_piece(self, player:int, tile:Vector2):
         """places piece on board at `tile`"""
-        piece = self.piece_type(player)
+        piece = self.piece_type(self, player)
         self.board.place_piece(tile, piece)
         self.table.pieces.append(piece)
 
     def select_piece(self, piece:ActivePiece):
         """selectets `piece`."""
+        self.deselect_piece()
         self.piece_selected = piece
         self.piece_selected.selected = True
         self.piece_selected.render_on_top()
