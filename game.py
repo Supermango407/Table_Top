@@ -61,17 +61,33 @@ class Game(spmg.Gameobject):
         
         super().__init__(listen=True)
 
-        # `turn_text`: text of the player whose turn it is
+        # set ui if displaying game
         if self.display_game:
-            self.turn_text = spmg.ui.Text(
+            self.turn_text:spmg.ui.Text = spmg.ui.Text(
                 value="",
-                position=Vector2(0, 16),
+                position=Vector2(0, 25),
+                font_size=48,
                 anchor=Vector2(0.5, 0),
                 relative_position=Vector2(0.5, 0),
                 bg_color=(255, 255, 255),
                 # parent=self
             )
-        
+            """text of the player whose turn it is"""
+            self.next_turn_button = spmg.ui.Button = spmg.ui.Button(
+                onclick=self.next_turn,
+                text_value="Next Turn",
+                disabled=True,
+                position=Vector2(0, -50),
+                anchor=Vector2(0.5, 1),
+                relative_position=Vector2(0.5, 1),
+            )
+
+    def event(self, event):
+        if self.display_game and event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            # if player can go to the next turn
+            if not self.next_turn_button.disabled:
+                self.next_turn()
+
     def start_game(self, *players:tuple[Player], save_record=False):
         """starts new game."""
         self.game_running = True
@@ -85,7 +101,7 @@ class Game(spmg.Gameobject):
         """move to the next player."""
         self.table.turn = (self.table.turn+1)%len(self.players)
         self.set_moves()
-        self.set_turn_text(self.table.turn)
+        self.set_ui_text(self.table.turn)
         
     def play_move(self, move=None, auto_next_turn:bool=True) -> None:
         """
@@ -117,7 +133,7 @@ class Game(spmg.Gameobject):
         """sets `moves` to a list with all valid moves."""
         self.moves = []
 
-    def set_turn_text(self, player:int) -> None:
+    def set_ui_text(self, player:int) -> None:
         """set the text, of turn text, if it exsists, to the `player`s name."""
         if self.display_game:
             self.turn_text.set_text(self.players[player].name)
@@ -141,7 +157,9 @@ class Game(spmg.Gameobject):
         if self.save_record:
             data.save_record(self.game_vars.name, self.players, winner, self.history)
         
-        if not self.display_game:
+        if self.display_game:
+            self.next_turn_button.disabled = True
+        else:
             self.destroy()
         
         # print('-'*80)

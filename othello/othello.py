@@ -103,7 +103,7 @@ class Othello(Game):
 
     def set_turn_color(self, player:int) -> None:
         """sets the color of Turn Text, if it exsits, to `player`'s color."""
-        if spmg.Gameobject.window != None:
+        if self.display_game:
             self.turn_text.set_color(othello_settings.piece_colors[player])
 
     def valid_move(self, move:Move):
@@ -215,12 +215,12 @@ class Othello(Game):
         moves = self.split_record(record)
         self.set_board()
 
-        self.set_turn_text(0)
+        self.set_ui_text(0)
         self.set_turn_color(0)
         
         for move in moves:
             time.sleep(time_between_moves)
-            self.set_turn_text(self.table.turn)
+            self.set_ui_text(self.table.turn)
             self.set_turn_color(self.table.turn)
             self.play_move_string(move)
         

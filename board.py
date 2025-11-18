@@ -345,6 +345,7 @@ class ActiveBoardGame(Game):
         super().__init__(**kwargs)
     
     def event(self, event):
+        super().event(event)
         if event.type == pygame.MOUSEBUTTONDOWN:
             self.started_clicking_at = self.mouse_pos
         if event.type == pygame.MOUSEBUTTONUP:

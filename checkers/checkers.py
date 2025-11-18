@@ -46,18 +46,18 @@ class CheckersPiece(ActivePiece):
 
         # draw king crown
         if self.is_king:
-            scale = checkers_settings.board['tile_size']//8
+            scale:Vector2 = Vector2(0.25, 0.125)*self.board.tile_size
             pygame.draw.polygon(
                 self.window,
                 (255, 255, 0),
                 [
-                    self.global_position + Vector2(-scale, scale),
-                    self.global_position + Vector2(-scale, -scale),
-                    self.global_position + Vector2(-scale//2, 0),
-                    self.global_position + Vector2(0, -scale),
-                    self.global_position + Vector2(scale//2, 0),
-                    self.global_position + Vector2(scale, -scale),
-                    self.global_position + Vector2(scale, scale),
+                    Vector2(-1, 1).elementwise()*scale + self.global_position,
+                    Vector2(-1, -1).elementwise()*scale + self.global_position,
+                    Vector2(-1/2, 0).elementwise()*scale + self.global_position,
+                    Vector2(0, -1).elementwise()*scale + self.global_position,
+                    Vector2(1/2, 0).elementwise()*scale + self.global_position,
+                    Vector2(1, -1).elementwise()*scale + self.global_position,
+                    Vector2(1, 1).elementwise()*scale + self.global_position,
                 ]
         )
 
@@ -75,8 +75,8 @@ class CheckersPiece(ActivePiece):
         tile_offsets:list[Vector2] = []
 
         # if not pieces turn than there are no valid moves
-        # if self.player != self.board.game_ref.table.turn:
-        #     return []
+        if self.player != self.board.game_ref.table.turn:
+            return []
 
         # if a piece was just jumped
         piece_jumping:CheckersPiece = self.board.game_ref.table.piece_jumping
@@ -126,7 +126,7 @@ class CheckersPiece(ActivePiece):
         
         return moves
 
-    def jump(self):
+    def jumped(self):
         """called when `self` is jumped."""
         self.destroy()
 
@@ -158,28 +158,59 @@ class Checkers(ActiveBoardGame):
 
     def play_move(self, move:Move):
         move.piece.move_to_tile(move.move_to)
-        self.auto_next_turn=True
+        
+        if self.display_game:
+            self.next_turn_button.disabled = False
         
         # if jumping a piece
         if move.piece_jumping != None:
-            move.piece_jumping.jump()
+            move.piece_jumping.jumped()
 
             # set piece_jumping to the piece thats jumping,
             # so that that is the only piece that can jump again.
-            # self.table.piece_jumping = move.piece
+            self.table.piece_jumping = move.piece
             
-            # set auto_next_turn to false
-            self.auto_next_turn=False
+            # set `auto_next_turn` to false
+            auto_next_turn=False
 
-        # if selected piece on kinging row than promote the piece
-        kinging_row:int = 0 if move.piece.player == 1 else 7
-        if not move.piece.is_king and move.piece.tile_on[1] == kinging_row:
-            move.piece.promote()
+        # if selected piece isn't already a king and 
+        # on kinging row than promote the piece
+        if not move.piece.is_king:
+            kinging_row:int = 0 if move.piece.player == 0 else 7
+            if move.piece.tile_on[1] == kinging_row:
+                move.piece.promote()
         
-        super().play_move(auto_next_turn=self.auto_next_turn)
+        super().play_move(auto_next_turn=False)
+
+    def get_winner(self):
+        are_red_pieces:bool = False
+        are_black_pieces:bool = False
+
+        for piece in self.board.pieces.values():
+            if piece.player == 0:
+                are_black_pieces = True
+            else:
+               are_red_pieces  = True
+            if are_red_pieces and are_black_pieces:
+                break
+        
+        if not are_red_pieces:
+            return 0
+        elif not are_black_pieces:
+            return 1
+        else:
+            return None
+
+    def set_turn_color(self, player:int) -> None:
+        """sets the color of Turn Text, if it exsits, to `player`'s color."""
+        if self.display_game:
+            self.turn_text.set_color(checkers_settings.piece_colors[player])
 
     def next_turn(self):
         super().next_turn()
+        if self.display_game:
+            self.next_turn_button.disabled = True
+            self.set_turn_color(self.table.turn)
         self.table.piece_jumping = None
 
         # set locked of pieces
@@ -198,10 +229,10 @@ class Checkers(ActiveBoardGame):
         self.place_piece(0, Vector2(6, 7))
         self.place_piece(0, Vector2(1, 6))
         self.place_piece(0, Vector2(3, 6))
-        self.place_piece(0, Vector2(5, 4)) # 5, 6
+        self.place_piece(0, Vector2(5, 6)) # 5, 4
         self.place_piece(0, Vector2(7, 6))
         self.place_piece(0, Vector2(0, 5))
-        self.place_piece(0, Vector2(3, 4)) # 2, 5
+        self.place_piece(0, Vector2(2, 5)) # 3, 4
         self.place_piece(0, Vector2(4, 5))
         self.place_piece(0, Vector2(6, 5))
 
@@ -209,11 +240,11 @@ class Checkers(ActiveBoardGame):
         self.place_piece(1, Vector2(3, 0))
         self.place_piece(1, Vector2(5, 0))
         self.place_piece(1, Vector2(7, 0))
-        self.place_piece(1, Vector2(0, 3)) # 0, 1
-        self.place_piece(1, Vector2(2, 3)) # 2, 1
+        self.place_piece(1, Vector2(0, 1)) # 0, 3
+        self.place_piece(1, Vector2(2, 1)) # 2, 3
         self.place_piece(1, Vector2(4, 1))
         self.place_piece(1, Vector2(6, 1))
         self.place_piece(1, Vector2(1, 2))
         self.place_piece(1, Vector2(3, 2))
-        self.place_piece(1, Vector2(4, 3)) # 5, 2
+        self.place_piece(1, Vector2(5, 2)) # 4, 3
         self.place_piece(1, Vector2(7, 2))
